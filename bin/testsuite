@@ -1,0 +1,9 @@
+#/usr/bin/env sh
+
+# Gets the lib folder relative to this script location
+# If this script is in /foo/bin, points to /foo/lib
+testsuite_path="$(cd "$(dirname "$0")/../lib";pwd)"
+
+. "$testsuite_path/testsuite.sh" || exit 1
+
+testsuite "$@"
