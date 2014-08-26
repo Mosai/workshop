@@ -24,16 +24,15 @@ testsuite_file ()
 	passed_count=0
 	total_count=0
 
-	if [ -z "$test_list" ]
-	then
+	if [ -z "$test_list" ];then
 		echo "No tests found on $test_file" 1>&2
 	fi
 
 	for test_function in $test_list; do
 		total_count=$((total_count+1))
 		testsuite_exec "$test_file" "$test_function"
-		if [ $? = 0 ]
-		then
+
+		if [ $? = 0 ];then
 			passed_count=$((passed_count+1))
 		fi
 	done
@@ -60,8 +59,7 @@ testsuite_exec ()
 
 	returned=$? # Return code for the test, saved for later
 
-	if [ $returned = 0 ]
-	then
+	if [ $returned = 0 ];then
 		test_status="[x]"
 	fi
 
