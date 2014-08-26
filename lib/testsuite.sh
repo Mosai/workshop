@@ -16,26 +16,34 @@ testsuite_help ()
 	HELP
 }
 
-# Run tests on a single test file
+# Run tests for a single file
 testsuite_file ()
 {
 	test_file="$1"
-	test_list="$(testsuite_list "$test_file")"
+
+	testsuite_list "$test_file" | testsuite_run
+}
+
+# Run tests from a list
+testsuite_run ()
+{
 	passed_count=0
 	total_count=0
 
-	if [ -z "$test_list" ];then
-		echo "No tests found on $test_file" 1>&2
-	fi
-
-	for test_function in $test_list; do
+	# Read each line of input
+	while read test_parameters; do
 		total_count=$((total_count+1))
-		testsuite_exec "$test_file" "$test_function"
+		testsuite_exec $test_parameters  # Expand line as parameters
 
 		if [ $? = 0 ];then
 			passed_count=$((passed_count+1))
 		fi
 	done
+
+	if [ $total_count = 0 ];then
+		echo "No tests found on $test_file" 1>&2
+		return 0
+	fi
 
 	cat <<-RESULT
 
@@ -79,5 +87,8 @@ testsuite_list ()
 	target="$1"
 	signature="s/^\(test_[a-zA-Z0-9_]*\)\s*()$/\1/p"
 
-	cat "$target" | sed -n "$signature"
+	cat "$target" |	sed -n "$signature" |
+		while read line; do
+			echo "$target $line"
+		done
 }
