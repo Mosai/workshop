@@ -6,4 +6,7 @@ testsuite_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
 . "$testsuite_path/testsuite.sh" || exit 1
 
+# Enables word split on zsh
+command -v setopt 2>&1 >/dev/null && setopt SH_WORD_SPLIT
+
 testsuite "$@"
