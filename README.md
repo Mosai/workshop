@@ -34,12 +34,16 @@ You can run tests using the `$ bin/testsuite` tool from this package. This is
 how the runner output is presented:
 
 ```
-$ bin/testsuite file test/testsuite_basics.sh 
-[x] this test should always pass
-[ ] this test should always fail
-[x] tr can replace fancy chars
+$ bin/testsuite run test/
+test/testsuite_examples.test.sh
+  [x] this test should always pass
+  [x] tr can replace fancy chars
 
-2 tests out of 3 passed.
+test/testsuite_shell.test.sh
+  [x] arithmetic sum
+
+3 tests out of 3 passed.
+
 ```
 
 Output from test functions is not displayed on the test runner, so you don't need
