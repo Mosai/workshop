@@ -1,3 +1,6 @@
+# Saves the current shell command for future use
+testsuite_current_shell=$(ps -p $$ | tail -1 | sed 's/.* //g')
+
 # Dispatches commands to other testsuite_ functions
 testsuite () ( testsuite_"$@" )
 
@@ -70,10 +73,9 @@ testsuite_exec ()
 	test_file="$1"
 	test_function="$2"
 	test_status="[ ]"
-	current_shell=$(ps -p $$ | tail -1 | sed 's/.* //g')
 
 	# Loads the test file and executes the test in another shell instance
-	$current_shell <<-EXTERNAL
+	$testsuite_current_shell <<-EXTERNAL
 		. "$test_file" 1>&2 2>/dev/null
 		$test_function 1>&2 2>/dev/null
 	EXTERNAL
