@@ -1,5 +1,7 @@
 # Saves the current shell command for future use
 testsuite_current_shell=$(ps -p $$ | tail -1 | sed 's/.* //g')
+# Switchable variable used when silence should be optional
+testsuite_silence="2>&1 >/dev/null"
 
 # Dispatches commands to other testsuite_ functions
 testsuite () ( testsuite_"$@" )
@@ -10,14 +12,22 @@ testsuite_ () ( echo "No command provided. Try 'testsuite help'" 1>&2 )
 # Provides help
 testsuite_help ()
 {
-	cat <<-HELP 1>&2
+	cat <<-HELP
 		Usage: testsuite [command]
 
-		Commands: run  [path]        Run tests for the specified path
-		          list [path]        Lists test functions in the specified path
-		          exec [file] [name] Run a single test by its file and name
+		Commands: run   [path]        Run tests for the specified path
+		          debug [path]        Run tests with debug settings
+		          list  [path]        Lists test functions in the specified path
+		          exec  [file] [name] Run a single test by its file and name
 		          help               Displays this message
 	HELP
+}
+
+# Run tests with verbose settings
+testsuite_debug ()
+{
+	testsuite_silence=""
+	testsuite_run "$@"
 }
 
 # Run tests on a specified path
@@ -76,8 +86,12 @@ testsuite_exec ()
 
 	# Loads the test file and executes the test in another shell instance
 	$testsuite_current_shell <<-EXTERNAL
-		. "$test_file" 1>&2 2>/dev/null
-		$test_function 1>&2 2>/dev/null
+		. "$test_file" $testsuite_silence
+		command -v setup 2>&1 >/dev/null && setup "$test_file"
+		$test_function $testsuite_silence
+		has_passed="\$?"
+		command -v teardown 2>&1 >/dev/null && teardown "$test_file"
+		exit \$has_passed
 	EXTERNAL
 
 	returned=$? # Return code for the test, saved for later
