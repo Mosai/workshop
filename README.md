@@ -4,7 +4,7 @@ Mosai Workshop
 A set of quality shell script automation tools.
 
   - Written in POSIX Shell and common utilities like `sed` and `tr`.
-  - Tested against bash, dash, ksh, zsh and busybox. 
+  - Tested against bash, dash/ash, ksh/pdksh, zsh and busybox sh.
   - Works out of the box without any dependency in most distros, OS X and MinGW.
 
 *This is a work in progress. This document represents the current version, but 
