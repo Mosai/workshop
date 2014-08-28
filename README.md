@@ -46,5 +46,25 @@ test/testsuite_shell.test.sh
 
 ```
 
-Output from test functions is not displayed on the test runner, so you don't need
-to redirect it to `/dev/null` by yourself.
+Output from test functions is not displayed on the test runner unless any errors occour, 
+so you don't need to redirect it to `/dev/null` by yourself.
+
+When an error is returned from a test function, testsuite displays a handy stack trace
+for the test (available on zsh, bash and ksh):
+
+```
+test/testsuite/library.test.sh
+  [ ] dispatcher should call and pass arguments
+   ++   library.test.sh:12   testsuite demo 1 2 3          
+   ++   testsuite.sh:5       testsuite_demo 1 2 3          
+   ++   library.test.sh:10   echo 'OK 1' 2 3               
+   +    library.test.sh:12   dispatched='OK 1 2 3'         
+   +    library.test.sh:14   '[' 'OK 1 2 3' = 'OK 1 2 ' ']'
+  [x] empty testsuite call should provide help on stderr
+  [x] help command should return help text
+  [x] list command can point to files
+  [x] list command can point to directories
+
+```
+
+For dash, a simpler trace is still displayed without the files and line numbers.

@@ -1,7 +1,5 @@
 # Saves the current shell command for future use
 testsuite_current_shell=$(ps -p $$ | tail -1 | sed 's/.* //g')
-# Switchable variable used when silence should be optional
-testsuite_silence="2>&1 >/dev/null"
 
 # Dispatches commands to other testsuite_ functions
 testsuite () ( testsuite_"$@" )
@@ -16,25 +14,17 @@ testsuite_help ()
 		Usage: testsuite [command]
 
 		Commands: run   [path]        Run tests for the specified path
-		          debug [path]        Run tests with debug settings
 		          list  [path]        Lists test functions in the specified path
 		          exec  [file] [name] Run a single test by its file and name
 		          help               Displays this message
 	HELP
 }
 
-# Run tests with verbose settings
-testsuite_debug ()
-{
-	testsuite_silence=""
-	testsuite_run "$@"
-}
-
 # Run tests on a specified path
 testsuite_run ()
 {
 	target="$1"
-	testsuite_list "$target" | sort -hb | testsuite_process "$target"
+	testsuite_list "$target" |  testsuite_process "$target"
 }
 
 # Run tests from STDIN list
@@ -85,15 +75,8 @@ testsuite_exec ()
 	test_status="[ ]"
 
 	# Loads the test file and executes the test in another shell instance
-	$testsuite_current_shell <<-EXTERNAL
-		. "$test_file" $testsuite_silence
-		command -v setup 2>&1 >/dev/null && setup "$test_file"
-		$test_function $testsuite_silence
-		has_passed="\$?"
-		command -v teardown 2>&1 >/dev/null && teardown "$test_file"
-		exit \$has_passed
-	EXTERNAL
 
+	results="$(testsuite_external "$test_file" 2>&1 >/dev/null)"
 	returned=$? # Return code for the test, saved for later
 
 	if [ $returned = 0 ];then
@@ -107,7 +90,42 @@ testsuite_exec ()
 		  $test_status $test_function
 	NAME
 
+	if [ $returned != 0 ];then
+		echo "$results" |
+		      tail -n+2 | 
+		      head -n-2 | 
+		      awk 'BEGIN{FS=OFS="\t"}{ printf "   %-4s %-20s %-30s\n", $1, $2, $3}'
+	fi
+
 	return $returned
+}
+
+testsuite_external ()
+{
+	test_file="$1"
+
+	if [ z"$BASH_VERSION" != z ]; then
+		trace_command='+	$(basename "${BASH_SOURCE}"):${LINENO}	'
+	elif [ z"$KSH_VERSION" != z ]; then
+		trace_command='+	$(basename "${.sh.file}"):${LINENO}	'
+	elif [ z"$ZSH_VERSION" != z ]; then
+		trace_command='+	%x:%I	'
+	else
+		trace_command="+	${LINENO}"
+	fi
+
+
+	$testsuite_current_shell <<-EXTERNAL
+		. "$test_file"
+		command -v setup 2>&1 >/dev/null && setup "$test_file"
+		PS4='$trace_command'
+		set -x
+		$test_function "$test_file"
+		has_passed="\$?"
+		set +x
+		command -v teardown 2>&1 >/dev/null && teardown "$test_file"
+		exit \$has_passed
+	EXTERNAL
 }
 
 # Lists test functions in the specified path
@@ -128,6 +146,7 @@ testsuite_listdir ()
 	target_dir="$1"
 
 	find "$target_dir" -type f -name "*.test.sh" |
+	grep -v "\.example\." |
 	while read test_file; do
 		testsuite_listfile "$test_file"
 	done
