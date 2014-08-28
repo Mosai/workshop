@@ -1,5 +1,9 @@
 # Saves the current shell command for future use
-testsuite_current_shell=$(ps -p $$ | tail -1 | sed 's/.* //g')
+testsuite_current_shell=$(ps -o pid,comm | grep $$ | head -n1 | sed 's/.* //g')
+
+if [ "$testsuite_current_shell" = "busybox" ];then
+	testsuite_current_shell="busybox sh"
+fi
 
 # Dispatches commands to other testsuite_ functions
 testsuite () ( testsuite_"$@" )
@@ -91,9 +95,8 @@ testsuite_exec ()
 	NAME
 
 	if [ $returned != 0 ];then
-		echo "$results" |
-		      tail -n+2 | 
-		      head -n-2 | 
+		echo "$results"   |
+		      sed '1d;$d' |
 		      awk 'BEGIN{FS=OFS="\t"}{ printf "   %-4s %-20s %-30s\n", $1, $2, $3}'
 	fi
 
@@ -111,9 +114,8 @@ testsuite_external ()
 	elif [ z"$ZSH_VERSION" != z ]; then
 		trace_command='+	%x:%I	'
 	else
-		trace_command="+	${LINENO}"
+		trace_command="+	${LINENO}	"
 	fi
-
 
 	$testsuite_current_shell <<-EXTERNAL
 		. "$test_file"

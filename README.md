@@ -4,7 +4,7 @@ Mosai Workshop
 A set of quality shell script automation tools.
 
   - Written in POSIX Shell and common utilities like `sed` and `tr`.
-  - Tested against bash, dash, ksh and zsh. 
+  - Tested against bash, dash, ksh, zsh and busybox. 
   - Works out of the box without any dependency in most distros, OS X and MinGW.
 
 *This is a work in progress. This document represents the current version, but 
@@ -67,4 +67,5 @@ test/testsuite/library.test.sh
 
 ```
 
-For dash, a simpler trace is still displayed without the files and line numbers.
+For dash and busybox, a simpler trace is still displayed without the files and 
+line numbers.
