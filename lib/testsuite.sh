@@ -30,14 +30,14 @@ testsuite_help ()
 testsuite_run ()
 {
 	target="$1"
-	testsuite_list "$target" |  testsuite_process simple "$target"
+	testsuite_list "$target" | testsuite_process simple "$target"
 }
 
 # Run tests and display results as specs
 testsuite_spec ()
 {
 	target="$1"
-	testsuite_list "$target" |  testsuite_process spec "$target"
+	testsuite_list "$target" | testsuite_process spec "$target"
 }
 
 # Run tests from STDIN list
@@ -80,6 +80,10 @@ testsuite_process ()
 
 		$passed_count tests out of $total_count passed.
 	RESULT
+
+	if [ "$passed_count" != "$total_count" ]; then
+		return 1
+	fi
 }
 
 testsuite_unit_report_spec ()

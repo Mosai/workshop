@@ -1,0 +1,14 @@
+language: bash
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y $TARGET_SHELL
+
+script:
+  - $TARGET_SHELL bin/testsuite spec test/
+
+env:
+  - TARGET_SHELL=bash
+  - TARGET_SHELL=dash
+  - TARGET_SHELL=zsh
+  - TARGET_SHELL=pdksh

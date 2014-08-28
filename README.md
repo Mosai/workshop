@@ -1,4 +1,4 @@
-Mosai Workshop
+Mosai Workshop 
 ==============
 
 A set of quality shell script automation tools.
@@ -9,6 +9,8 @@ A set of quality shell script automation tools.
 
 *This is a work in progress. This document represents the current version, but 
 more features and tools are planned.*
+
+[![Build Status](https://travis-ci.org/Mosai/workshop.svg?branch=master)](https://travis-ci.org/Mosai/workshop)
 
 The Tools
 ---------
