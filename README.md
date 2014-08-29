@@ -31,6 +31,7 @@ test_tr_can_replace_fancy_chars ()
 Each one of these functions runs in its own process to prevent contamination. A test
 passes when its function returns a successful code.
 
+#### Test Runner
 
 You can run tests using the `$ bin/testsuite` tool from this package. This is 
 how the runner output is presented:
@@ -50,6 +51,8 @@ test/testsuite_shell.test.sh
 
 Output from test functions is not displayed on the test runner unless any errors occour, 
 so you don't need to redirect it to `/dev/null` by yourself.
+
+#### Stack Traces
 
 When an error is returned from a test function, testsuite displays a handy stack trace
 for the test (available on zsh, bash and ksh):
@@ -71,3 +74,30 @@ test/testsuite/library.test.sh
 
 For dash and busybox, a simpler trace is still displayed without the files and 
 line numbers.
+
+#### Code Coverage
+
+Experimental code coverage reports are available for shells
+that support the rich stack traces. 
+
+This is an excerpt from the `$ bin/testsuite cov test/` output:
+
+```
+	testsuite_run ()
+	{
+1		target="$1"
+2		testsuite_list "$target" | testsuite_process simple "$target"
+	}
+	
+2	# Run tests and display results as specs
+	testsuite_spec ()
+1	{
+1		target="$1"
+2		testsuite_list "$target" | testsuite_process spec "$target"
+	}
+
+
+``` 
+
+The number on the left is the number of passes that 
+each specific line had.
