@@ -63,7 +63,7 @@ testsuite_cov ()
 			while read file_line; do
 				lineno="$(echo "$file_line" | cut -d" " -f1)"
 				pureline="$(echo "$file_line" | cut -d" " -f2-)"
-				matched="$(echo "$unsorted" | sed -n "/cd$lineno$/p" | wc -l)"
+				matched="$(echo "$unsorted" | sed -n "/	$lineno$/p" | wc -l)"
 				if [ "$matched" = "0" ]; then
 					echo "	$pureline"
 				else
