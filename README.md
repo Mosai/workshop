@@ -12,6 +12,18 @@ more features and tools are planned.*
 
 [![Build Status](https://travis-ci.org/Mosai/workshop.svg?branch=master)](https://travis-ci.org/Mosai/workshop)
 
+Installation
+------------
+
+Linux and OS X:
+
+  1. Clone or [download](https://github.com/Mosai/workshop/archive/master.zip) the project.
+
+Windows:
+
+  1. [Download git](http://git-scm.com/download/win) to get the git bash.
+  2. Clone or [download](https://github.com/Mosai/workshop/archive/master.zip) the project.
+
 The Tools
 ---------
 
