@@ -2,13 +2,21 @@ language: bash
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y $TARGET_SHELL
+  - sudo apt-get install -y $SHELL_PKG
 
 script:
   - $TARGET_SHELL bin/testsuite spec test/
 
 env:
-  - TARGET_SHELL=bash
-  - TARGET_SHELL=dash
-  - TARGET_SHELL=zsh
-  - TARGET_SHELL=pdksh
+  - TARGET_SHELL="bash"       SHELL_PKG=bash
+  - TARGET_SHELL="dash"       SHELL_PKG=dash
+  - TARGET_SHELL="zsh"        SHELL_PKG=zsh
+  - TARGET_SHELL="pdksh"      SHELL_PKG=pdksh
+  - TARGET_SHELL="ksh"        SHELL_PKG=ksh
+  - TARGET_SHELL="busybox sh" SHELL_PKG=busybox
+
+
+matrix:
+  allow_failures:
+    - env: TARGET_SHELL="ksh"        SHELL_PKG=ksh
+    - env: TARGET_SHELL="busybox sh" SHELL_PKG=busybox
