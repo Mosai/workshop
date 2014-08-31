@@ -72,3 +72,10 @@ test_testsuite_spec ()
 {
 	template_testsuite_runner "spec" "spec"
 }
+
+test_testsuite_cov ()
+{
+	testsuite_post_cov () ( cat )
+	template_testsuite_runner "cov" "cov"
+}
+

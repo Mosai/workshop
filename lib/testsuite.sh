@@ -48,10 +48,18 @@ testsuite_spec ()
 	testsuite_list "$target" | testsuite_process spec "$target"
 }
 
+# Run tests and display results as specs
 testsuite_cov ()
 {
 	target="$1"
-	unsorted="$(testsuite_list "$target" | testsuite_process cov "$target")"
+	testsuite_list "$target" | testsuite_process cov "$target" |
+	testsuite_post_cov "$target"
+}
+
+testsuite_post_cov ()
+{
+	target="$1"
+	unsorted="$(cat)"
 	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
 
 	for file in $covered_files; do
@@ -64,11 +72,7 @@ testsuite_cov ()
 				lineno="$(echo "$file_line" | cut -d" " -f1)"
 				pureline="$(echo "$file_line" | cut -d" " -f2-)"
 				matched="$(echo "$unsorted" | sed -n "/	$lineno$/p" | wc -l)"
-				if [ "$matched" = "0" ]; then
-					echo "	$pureline"
-				else
-					echo "$matched	$pureline"
-				fi
+				echo "$matched	$pureline"
 			done
 			IFS=
 		fi
