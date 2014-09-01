@@ -1,25 +1,11 @@
 # File name pattern for test files
-testsuite_file_pattern="*.test.sh"
-# Saves the current shell command for future use
-testsuite_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
-# Some shells are reported with a dash 
-testsuite_current_shell="${testsuite_current_shell#-}"
-
-# Falls back to $SHELL when no valid command found
-if [ -z "$(command -v "$testsuite_current_shell")" ]; then
-	testsuite_current_shell="$SHELL"
-fi
-
-# Fixes incomplete ps output for the busybox sh
-if [ "$testsuite_current_shell" = "busybox" ]; then
-	testsuite_current_shell="busybox sh"
-fi
+testsuite_file_pattern="*.test.sh"	
 
 # Dispatches commands to other testsuite_ functions
 testsuite () ( testsuite_"$@" )
 
 # Placeholder for empty calls
-testsuite_ () ( echo "No command provided. Try 'testsuite help'" 1>&2 )
+testsuite_ () ( echo "No command provided. Try 'testsuite help'" 1>&2; return 1 )
 
 # Provides help
 testsuite_help ()
@@ -72,6 +58,8 @@ testsuite_exec_spec () ( testsuite_stack_collect "$1" "$2" "basename" )
 # Reports a test file
 testsuite_file_report_spec ()
 {
+	current_file="$1"
+	
 	cat <<-FILEHEADER
 
 		### $current_file
@@ -262,15 +250,17 @@ testsuite_external ()
 		trace_command="+	[unknown]:\${LINENO}	" # Fallback
 	fi
 
+	testsuite_find_current_shell
+
 	# Executes the shell in a separate process
 	$testsuite_current_shell <<-EXTERNAL
 		# Enables compatibility options when needed
 		command -v setopt 2>&1 >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
 
 		current_file="$test_file" # Stores the current file
-		. "$test_file"            # Loads the file
 		PS4='$trace_command'      # Injects the debug prompt
 		set -x                    # Enables debugging
+		. "$test_file"            # Loads the file
 		$test_function            # Executes the function
 		has_passed="\$?"          # Stores the returned code
 		set +x                    # Disables debugging
@@ -313,4 +303,28 @@ testsuite_listfile ()
 		while read line; do
 			echo "$target_file $line"
 		done
+}
+
+testsuite_find_current_shell () 
+{
+	if [ -z "$testsuite_current_shell" ]; then
+		# File name pattern for test files
+		testsuite_file_pattern="*.test.sh"
+		# Saves the current shell command for future use
+		testsuite_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
+		# Some shells are reported with a dash 
+		testsuite_current_shell="${testsuite_current_shell#-}"
+
+		# Falls back to $SHELL when no valid command found
+		if [ -z "$(command -v "$testsuite_current_shell")" ]; then
+			testsuite_current_shell="$SHELL"
+		fi
+
+		# Fixes incomplete ps output for the busybox sh
+		if [ "$testsuite_current_shell" = "busybox" ]; then
+			testsuite_current_shell="busybox sh"
+		fi
+
+		export testsuite_current_shell="$testsuite_current_shell"
+	fi
 }

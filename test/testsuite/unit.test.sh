@@ -13,9 +13,10 @@ test_testsuite_empty_call ()
 test_testsuite_help ()
 {
 	help_call="$(testsuite help)"
+	returned_code=$?
 
 	[ ! -z "$help_call" ] &&
-	[ $? = 0 ]
+	[ $returned_code = 0 ]
 }
 
 test_testsuite_list_using_files ()
@@ -243,3 +244,35 @@ test_testsuite_unit_report_run_success ()
 {
 	template_testsuite_unit_report run 0 "\."
 }
+
+template_testsuite_exec ()
+{
+	mode="$1"
+	expected="$2"
+	testsuite_stack_collect () ( echo "collect called $@" )
+
+	check ()
+	{
+		result="$(cat)"
+
+		[ "$result" = "collect called /foo/bar foo_bar $expected" ]
+	}
+
+	testsuite_exec_$mode "/foo/bar" "foo_bar" | check
+}
+
+test_testsuite_exec_spec ()
+{
+	template_testsuite_exec spec "basename"
+}
+
+test_testsuite_exec_run ()
+{
+	template_testsuite_exec run "basename"
+}
+
+test_testsuite_exec_cov ()
+{
+	template_testsuite_exec cov "echo"
+}
+
