@@ -171,11 +171,11 @@ testsuite_post_cov_line ()
 	   [ -z "$(echo "$pureline" | sed '/^\s*[a-zA-Z0-9_]*\s*()$/d')" ] ||
 	# Ignore blank lines
 	   [ -z "$(echo "$pureline" | sed '/^\s*$/d')" ]; then
-		echo "$(basename $file)	-	$pureline"
+		echo "-	$(basename $file)	$pureline"
 		return
 	fi
 
-	echo "$(basename $file)	$matched	$pureline"
+	echo "$matched	$(basename $file)	$pureline"
 }
 
 # Run tests from a STDIN list

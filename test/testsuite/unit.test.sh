@@ -95,10 +95,10 @@ test_testsuite_postcov_counts_lines_properly ()
 	check ()
 	{
 		output="$($real_cat)"
-		traced_lines="$(echo "$output" | cut -d"	" -f2 | grep "^-" | wc -l)"
-		zeroed_lines="$(echo "$output" | cut -d"	" -f2 | grep "^0" | wc -l)"
-		covered="$(echo "$output" | cut -d"	" -f2 | grep "^1" | wc -l)"
-		doubled="$(echo "$output" | cut -d"	" -f2 | grep "^2" | wc -l)"
+		traced_lines="$(echo "$output" | grep "^-" | wc -l)"
+		zeroed_lines="$(echo "$output" | grep "^0" | wc -l)"
+		covered="$(echo "$output" | grep "^1" | wc -l)"
+		doubled="$(echo "$output" | grep "^2" | wc -l)"
 
 		[ $traced_lines = 16 ] &&
 		[ $zeroed_lines = 1 ] &&
