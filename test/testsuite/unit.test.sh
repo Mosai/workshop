@@ -85,10 +85,10 @@ test_testsuite_postcov_counts_lines_properly ()
 	cat () 
 	{
 		$real_cat <<-INPUT
-			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	3
-			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	8
-			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	8
-			$(dirname $current_file)/resources/testsuite_postcov2.fixture.sh	8
+			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	4
+			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	9
+			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	9
+			$(dirname $current_file)/resources/testsuite_postcov2.fixture.sh	9
 		INPUT
 	}
 
@@ -100,7 +100,7 @@ test_testsuite_postcov_counts_lines_properly ()
 		covered="$(echo "$output" | cut -d"	" -f2 | grep "^1" | wc -l)"
 		doubled="$(echo "$output" | cut -d"	" -f2 | grep "^2" | wc -l)"
 
-		[ $traced_lines = 12 ] &&
+		[ $traced_lines = 16 ] &&
 		[ $zeroed_lines = 1 ] &&
 		[ $covered = 2 ] &&
 		[ $doubled = 1 ]
