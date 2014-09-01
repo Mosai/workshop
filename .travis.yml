@@ -1,24 +1,47 @@
+# Mosai Workshop travis-ci.org configuration
+
+# Actually, Travis don't allow `shell` only. We're portable :D
 language: bash
 
+# List of shells for testing
+env:
+  - TARGET_SHELL="bash"        SHELL_PKG="bash"
+  - TARGET_SHELL="dash"        SHELL_PKG="dash"
+  - TARGET_SHELL="zsh"         SHELL_PKG="zsh"
+  - TARGET_SHELL="pdksh"       SHELL_PKG="pdksh"
+  - TARGET_SHELL="ksh"         SHELL_PKG="ksh"
+  - TARGET_SHELL="busybox sh"  SHELL_PKG="busybox"
+  - TARGET_SHELL="mksh"        SHELL_PKG="mksh"
+  - TARGET_SHELL="zsh-beta"    SHELL_PKG="zsh-beta"
+
+  # Older versions of bash from ppa
+  - TARGET_SHELL="bash2.05b"   SHELL_PKG="bash2.05b"  PPA_REQUIRED=true
+  - TARGET_SHELL="bash3.0.16"  SHELL_PKG="bash3.0.16" PPA_REQUIRED=true
+  - TARGET_SHELL="bash3.2.48"  SHELL_PKG="bash3.2.48" PPA_REQUIRED=true
+  - TARGET_SHELL="bash4.2.45"  SHELL_PKG="bash4.2.45" PPA_REQUIRED=true
+
+# Template for installation of each test env
+# see the env: section
 before_install:
+  # Sets a PPA from other release
+  # 1 - Adds a key manually. We need to avoid add-apt-repository
+  - $PPA_REQUIRED && sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F5751EC8
+  # 2 - Registers it on the apt source
+  - $PPA_REQUIRED && sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/agriffis/bashes/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"
+
+  # Updates the index
   - sudo apt-get update -qq
+  # Installs only the packages required for the env
   - sudo apt-get install -y $SHELL_PKG
 
+# see the env: section
 script:
+  # Runs the script in the shell declared by env
   - $TARGET_SHELL bin/testsuite spec test/
 
-env:
-  - TARGET_SHELL="bash"       SHELL_PKG=bash
-  - TARGET_SHELL="dash"       SHELL_PKG=dash
-  - TARGET_SHELL="zsh"        SHELL_PKG=zsh
-  - TARGET_SHELL="pdksh"      SHELL_PKG=pdksh
-  - TARGET_SHELL="ksh"        SHELL_PKG=ksh
-  - TARGET_SHELL="busybox sh" SHELL_PKG=busybox
-  - TARGET_SHELL="mksh"       SHELL_PKG=mksh
-
-
 matrix:
+  # These envs can fail
   allow_failures:
-    - env: TARGET_SHELL="ksh"        SHELL_PKG=ksh
-    - env: TARGET_SHELL="busybox sh" SHELL_PKG=busybox
-    - env: TARGET_SHELL="mksh"       SHELL_PKG=mksh
+    # ksh hangs in the first test for no reason, only on Travis.
+    - env: TARGET_SHELL="ksh"         SHELL_PKG="ksh"
+    - env: TARGET_SHELL="zsh-beta"    SHELL_PKG="zsh-beta"

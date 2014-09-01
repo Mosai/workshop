@@ -263,6 +263,8 @@ testsuite_external ()
 	test_function="$2"
 	file_filter="$3"
 
+	testsuite_find_current_shell
+
 	# Find out command to get file/line information on PS4 for
 	# each shell
 	if [ z"$BASH_VERSION" != z ]; then
@@ -279,12 +281,10 @@ testsuite_external ()
 		trace_command="+	[unknown]:\${LINENO}	" # Fallback
 	fi
 
-	testsuite_find_current_shell
-
 	# Executes the shell in a separate process
 	$testsuite_current_shell <<-EXTERNAL
 		# Enables compatibility options when needed
-		command -v setopt 2>&1 >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
+		command -v setopt 2>/dev/null >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
 
 		current_file="$test_file" # Stores the current file
 		PS4='$trace_command'      # Injects the debug prompt
