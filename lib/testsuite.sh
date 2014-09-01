@@ -139,7 +139,7 @@ testsuite_post_cov ()
 				# Full line text
 				pureline="$(echo "$file_line" | cut -d" " -f2-)"
 				# Number of matches on this line
-				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l)"
+				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l | sed "s/[	 ]*//")"
 				# Formatted number of matched lines <tab> the file line
 				testsuite_post_cov_line "$lineno" "$pureline" "$matched" "$file"
 			done
@@ -152,25 +152,25 @@ testsuite_post_cov_line ()
 {
 	lineno="$1"
 	pureline="$2"
-	matched="$3"
+	matched=$3
 	file="$4"
 
 	# Ignore comment lines
-	if [ -z "$(echo "$pureline" | sed '/^\s*#/d')" ]        ||
+	if [ -z "$(echo "$pureline" | sed '/^[	 ]*#/d')" ]        ||
 	# Ignore lines with only a '{'
-	   [ -z "$(echo "$pureline" | sed '/^\s*{\s*$/d')" ]    ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*{[	 ]*$/d')" ]    ||
 	# Ignore lines with only a '}'
-	   [ -z "$(echo "$pureline" | sed '/^\s*}\s*$/d')" ]    ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*}[	 ]*$/d')" ]    ||
 	# Ignore lines with only a 'fi'
-	   [ -z "$(echo "$pureline" | sed '/^\s*fi\s*$/d')" ]   ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*fi[	 ]*$/d')" ]   ||
 	# Ignore lines with only a 'done'
-	   [ -z "$(echo "$pureline" | sed '/^\s*done\s*$/d')" ] ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*done[	 ]*$/d')" ] ||
 	# Ignore lines with only a 'else'
-	   [ -z "$(echo "$pureline" | sed '/^\s*else\s*$/d')" ] ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*else[	 ]*$/d')" ] ||
 	# Ignore lines with only a function declaration
-	   [ -z "$(echo "$pureline" | sed '/^\s*[a-zA-Z0-9_]*\s*()$/d')" ] ||
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*[a-zA-Z0-9_]*[	 ]*()$/d')" ] ||
 	# Ignore blank lines
-	   [ -z "$(echo "$pureline" | sed '/^\s*$/d')" ]; then
+	   [ -z "$(echo "$pureline" | sed '/^[	 ]*$/d')" ]; then
 		echo "-	$(basename $file)	$pureline"
 		return
 	fi
@@ -269,6 +269,8 @@ testsuite_external ()
 		trace_command="+	\$($file_filter \"\${BASH_SOURCE}\"):\${LINENO}	"
 	elif [ "$testsuite_current_shell" = "pdksh" ]; then
 		trace_command="+	[unknown]:\${LINENO}	"
+	elif [ "$testsuite_current_shell" = "mksh" ]; then
+		trace_command="+	[unknown]:\${LINENO}	"
 	elif [ z"$KSH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${.sh.file}\"):\${LINENO}	"
 	elif [ z"$ZSH_VERSION" != z ]; then
@@ -324,7 +326,7 @@ testsuite_listdir ()
 testsuite_listfile ()
 {
 	target_file="$1"
-	signature="/^\(test_[a-zA-Z0-9_]*\)\s*/p"
+	signature="/^\(test_[a-zA-Z0-9_]*\)[	 ]*/p"
 
 	cat "$target_file" | sed -n "$signature" | cut -d" " -f1 |
 		while read line; do
