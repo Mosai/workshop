@@ -14,9 +14,11 @@ env:
   - TARGET_SHELL="pdksh"      SHELL_PKG=pdksh
   - TARGET_SHELL="ksh"        SHELL_PKG=ksh
   - TARGET_SHELL="busybox sh" SHELL_PKG=busybox
+  - TARGET_SHELL="mksh"       SHELL_PKG=mksh
 
 
 matrix:
   allow_failures:
     - env: TARGET_SHELL="ksh"        SHELL_PKG=ksh
     - env: TARGET_SHELL="busybox sh" SHELL_PKG=busybox
+    - env: TARGET_SHELL="mksh"       SHELL_PKG=mksh
