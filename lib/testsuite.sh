@@ -28,6 +28,7 @@ testsuite_help ()
 
 		Commands: run   [path]        Run tests for the specified path
 		          spec  [path]        Run tests and display results as specs
+		          cov   [path]        Displays the code coverage for files used
 		          list  [path]        Lists test functions in the specified path
 		          exec  [file] [name] Run a single test by its file and name
 		          help                Displays this message
@@ -53,17 +54,18 @@ testsuite_cov ()
 {
 	target="$1"
 	testsuite_list "$target" | testsuite_process cov "$target" |
-	testsuite_post_cov "$target"
+	testsuite_post_cov
 }
 
 testsuite_post_cov ()
 {
-	target="$1"
 	unsorted="$(cat)"
 	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
 
 	for file in $covered_files; do
 		if [ -f $file ]; then
+
+			thisfile="$(echo "$unsorted" | grep "^$file")"
 
 			IFS='' 
 			sed '/./=' $file     | 
@@ -71,7 +73,7 @@ testsuite_post_cov ()
 			while read file_line; do
 				lineno="$(echo "$file_line" | cut -d" " -f1)"
 				pureline="$(echo "$file_line" | cut -d" " -f2-)"
-				matched="$(echo "$unsorted" | sed -n "/	$lineno$/p" | wc -l)"
+				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l)"
 				echo "$matched	$pureline"
 			done
 			IFS=
@@ -131,17 +133,17 @@ testsuite_unit_report_spec ()
 	test_function="$2"
 	returned="$3"
 	results="$4"
-	test_status="[ ]"
+	test_status="fail:"
 		
 	if [ $returned = 0 ]; then
-		test_status="[x]"
+		test_status="pass:"
 	fi
 
 	# Removes the 'test_' from the start of the name
 	test_function=${test_function#test_}
 
 	cat <<-NAME | tr '_' ' '
-		  $test_status $test_function
+		  - $test_status $test_function
 	NAME
 
 	testsuite_unit_stack "$returned" "$results"
@@ -178,7 +180,7 @@ testsuite_file_report_spec ()
 {
 	cat <<-FILEHEADER
 
-		$current_file
+		### $current_file
 	FILEHEADER
 }
 
@@ -233,6 +235,8 @@ testsuite_external ()
 
 	$testsuite_current_shell <<-EXTERNAL
 		. "$test_file"
+		current_file="$test_file"
+		command -v setopt 2>&1 >/dev/null && setopt SH_WORD_SPLIT
 		command -v setup 2>&1 >/dev/null  && setup "$test_file"
 		command -v setopt 2>&1 >/dev/null && setopt PROMPT_SUBST
 		PS4='$trace_command'

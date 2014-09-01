@@ -50,15 +50,18 @@ how the runner output is presented:
 
 ```
 $ bin/testsuite run test/
-test/testsuite_examples.test.sh
-  [x] this test should always pass
-  [x] tr can replace fancy chars
+### test/testsuite/unit.test.sh
+  - pass: testsuite empty call
+  - pass: testsuite help
+  - pass: testsuite list using files
+  - pass: testsuite list using directories
+  - pass: testsuite list without parameters
+  - pass: testsuite run
+  - pass: testsuite spec
+  - pass: testsuite cov
+  - pass: testsuite postcov counts lines properly
 
-test/testsuite_shell.test.sh
-  [x] arithmetic sum
-
-3 tests out of 3 passed.
-
+9 tests out of 9 passed.
 ```
 
 Output from test functions is not displayed on the test runner unless any errors occour, 
@@ -70,17 +73,24 @@ When an error is returned from a test function, testsuite displays a handy stack
 for the test (available on zsh, bash and ksh):
 
 ```
-test/testsuite/library.test.sh
-  [ ] dispatcher should call and pass arguments
-   ++   library.test.sh:12   testsuite demo 1 2 3          
-   ++   testsuite.sh:5       testsuite_demo 1 2 3          
-   ++   library.test.sh:10   echo 'OK 1' 2 3               
-   +    library.test.sh:12   dispatched='OK 1 2 3'         
-   +    library.test.sh:14   '[' 'OK 1 2 3' = 'OK 1 2 ' ']'
-  [x] empty testsuite call should provide help on stderr
-  [x] help command should return help text
-  [x] list command can point to files
-  [x] list command can point to directories
+### test/testsuite/unit.test.sh
+  - fail: testsuite empty call
+   +    unit.test.sh:12      dispatched=+                  
+   +    testsuite.sh:18      testsuite_demo 1 2 3          
+   +    :3                   echo 'OK 1' 2 3               
+   +    unit.test.sh:12      dispatched='OK 1 2 3'         
+   +    unit.test.sh:14      [ 'OK 1 2 3' '=' 'OK 1 2 ' ']'
+   +    zsh:9                has_passed=1                  
+  - pass: testsuite help
+  - pass: testsuite list using files
+  - pass: testsuite list using directories
+  - pass: testsuite list without parameters
+  - pass: testsuite run
+  - pass: testsuite spec
+  - pass: testsuite cov
+  - pass: testsuite postcov counts lines properly
+
+8 tests out of 9 passed.
 
 ```
 
