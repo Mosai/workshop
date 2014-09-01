@@ -213,6 +213,18 @@ test_testsuite_process_with_mixed_failures ()
 		check
 }
 
+test_testsuite_process_with_no_tests ()
+{
+	testsuite_exec_mock () ( echo "exec_mock called $@" )
+	testsuite_file_report_mock () ( echo "file_report_mock called $@" )
+	testsuite_unit_report_mock () ( echo "unit_report_mock called $@" )
+	mocklist () ( : )
+
+	result="$(mocklist | testsuite_process "mock" "$(dirname $current_file)/resources/")"
+
+	[ "$result" = "No tests found on $(dirname $current_file)/resources/" ]
+}
+
 template_testsuite_unit_report ()
 {
 	expected_mode="$1"
@@ -278,3 +290,37 @@ test_testsuite_exec_cov ()
 	template_testsuite_exec cov "echo"
 }
 
+test_testsuite_file_report_spec ()
+{
+	check () 
+	{
+		result="$(cat | tail -n 1)"
+
+		[ "$result" = "### /foo/bar" ]
+	}
+	testsuite_file_report_spec "/foo/bar" | check
+}
+
+test_testsuite_unit_report_cov ()
+{
+	unit_results_mock ()
+	{
+		cat <<-RESULTS
+
+			This line should be removed
+			+	somefile.sh:2	This line stays!
+
+			This line should be removed
+
+			+	somefile.sh:3	This line stays!			
+			++	somefile.sh:4	This line stays!			
+			++  :3				This line should be removed
+		RESULTS
+	}
+	unit_results=$(unit_results_mock)
+
+	result="$(testsuite_unit_report_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
+	line_count="$(echo "$result" |  grep somefile.sh | wc -l)"
+
+	[ "$line_count" = 3 ]
+}

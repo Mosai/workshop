@@ -105,9 +105,6 @@ testsuite_file_report_cov () ( : )
 # Reports a single unit
 testsuite_unit_report_cov ()
 {
-	test_file="$1"
-	test_function="$2"
-	returned="$3"
 	results="$4"
 
 	echo "$results"    |
@@ -117,7 +114,7 @@ testsuite_unit_report_cov ()
 		cut -d"	" -f2  | 
 		# Removes empty lines and lines without file names,
 		# change the : into a tab.
-		sed '/^:/d;   /^\s*$/d;   s/:/	/g' 
+		sed '/^:/d;   /^\s*$/d;   s/:/	/' 
 }
 # Post-processes unit stacks into coverage info
 testsuite_post_cov ()
@@ -215,9 +212,9 @@ testsuite_process ()
 		last_file="$current_file"
 	done
 
-	if [ $total_count = 0 ]; then
-		echo "No tests found on $target" 1>&2
-		return 0
+	if [ "$total_count" = "0" ]; then
+		echo "No tests found on $target"
+		return 1
 	fi
 
 	cat <<-RESULT
