@@ -65,7 +65,7 @@ template_testsuite_runner ()
 
 test_testsuite_run ()
 {
-	template_testsuite_runner "simple" "run"
+	template_testsuite_runner "run" "run"
 }
 
 test_testsuite_spec ()
@@ -214,3 +214,36 @@ test_testsuite_process_with_mixed_failures ()
 		check
 }
 
+template_testsuite_unit_report ()
+{
+	expected_mode="$1"
+	expected_code="$2"
+	expected_string="$3"	
+
+	result="$(testsuite_unit_report_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
+	pass_results="$(echo "$result" | grep "$expected_string" | wc -l)"
+
+	[ "$pass_results" = 1 ]
+}
+
+test_testsuite_unit_report_spec_success ()
+{
+	testsuite_stack_format () ( : )
+	template_testsuite_unit_report spec 0 "pass:"
+}
+
+test_testsuite_unit_report_spec_fail ()
+{
+	testsuite_stack_format () ( : )
+	template_testsuite_unit_report spec 1 "fail:"
+}
+
+test_testsuite_unit_report_run_fail ()
+{
+	template_testsuite_unit_report run 1 "E"
+}
+
+test_testsuite_unit_report_run_success ()
+{
+	template_testsuite_unit_report run 0 "\."
+}

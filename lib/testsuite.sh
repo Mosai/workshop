@@ -2,6 +2,7 @@
 testsuite_file_pattern="*.test.sh"
 # Saves the current shell command for future use
 testsuite_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
+# Some shells are reported with a dash 
 testsuite_current_shell="${testsuite_current_shell#-}"
 
 # Falls back to $SHELL when no valid command found
@@ -35,28 +36,95 @@ testsuite_help ()
 	HELP
 }
 
-# Run tests on a specified path
+# Main function for the `testsuite run` report
 testsuite_run ()
 {
 	target="$1"
-	testsuite_list "$target" | testsuite_process simple "$target"
+	testsuite_list "$target" | testsuite_process run "$target"
+}
+# Executes a single test
+testsuite_exec_run () ( testsuite_stack_collect "$1" "$2" "basename" )
+# Reports a test file
+testsuite_file_report_run () ( : )
+# Reports a single unit
+testsuite_unit_report_run ()
+{
+	test_file="$1"
+	test_function="$2"
+	returned="$3"
+	results="$4"
+		
+	if [ $returned = 0 ]; then
+		echo -n "."
+	else
+		echo -n "E"
+	fi
 }
 
-# Run tests and display results as specs
+# Main function for the `testsuite spec` report
 testsuite_spec ()
 {
 	target="$1"
 	testsuite_list "$target" | testsuite_process spec "$target"
 }
+# Executes a single test
+testsuite_exec_spec () ( testsuite_stack_collect "$1" "$2" "basename" )
+# Reports a test file
+testsuite_file_report_spec ()
+{
+	cat <<-FILEHEADER
 
-# Run tests and display results as specs
+		### $current_file
+	FILEHEADER
+}
+# Reports a single unit
+testsuite_unit_report_spec ()
+{
+	test_file="$1"
+	test_function="$2"
+	returned="$3"
+	results="$4"
+	test_status="fail:"
+		
+	if [ $returned = 0 ]; then
+		test_status="pass:"
+	fi
+
+	# Removes the 'test_' from the start of the name
+	test_function=${test_function#test_}
+
+	cat <<-NAME | tr '_' ' '
+		  - $test_status $test_function
+	NAME
+
+	testsuite_stack_format "$returned" "$results"
+}
+
+# Main function for the `testsuite cov` report
 testsuite_cov ()
 {
 	target="$1"
 	testsuite_list "$target" | testsuite_process cov "$target" |
 	testsuite_post_cov
 }
+# Executes a single test
+testsuite_exec_cov () ( testsuite_stack_collect "$1" "$2" "echo" )
+# Reports a test file
+testsuite_file_report_cov () ( : )
+# Reports a single unit
+testsuite_unit_report_cov ()
+{
+	test_file="$1"
+	test_function="$2"
+	returned="$3"
+	results="$4"
 
+	echo "$results"    | 
+		sed '/^[^+]/d' |
+		cut -d"	" -f2  |
+		sed '/^:/d;/^\s*$/d;s/:/	/g'
+}
+# Post-processes unit stacks into coverage info
 testsuite_post_cov ()
 {
 	unsorted="$(cat)"
@@ -81,7 +149,7 @@ testsuite_post_cov ()
 	done
 }
 
-# Run tests from STDIN list
+# Run tests from a STDIN list
 testsuite_process ()
 {
 	report_mode="$1"
@@ -127,42 +195,8 @@ testsuite_process ()
 	fi
 }
 
-testsuite_unit_report_spec ()
-{
-	test_file="$1"
-	test_function="$2"
-	returned="$3"
-	results="$4"
-	test_status="fail:"
-		
-	if [ $returned = 0 ]; then
-		test_status="pass:"
-	fi
-
-	# Removes the 'test_' from the start of the name
-	test_function=${test_function#test_}
-
-	cat <<-NAME | tr '_' ' '
-		  - $test_status $test_function
-	NAME
-
-	testsuite_unit_stack "$returned" "$results"
-}
-
-testsuite_unit_report_cov ()
-{
-	test_file="$1"
-	test_function="$2"
-	returned="$3"
-	results="$4"
-
-	echo "$results"    | 
-		sed '/^[^+]/d' |
-		cut -d"	" -f2  |
-		sed '/^:/d;/^\s*$/d;s/:/	/g'
-}
-
-testsuite_unit_stack ()
+# Formats a stack to be displayed
+testsuite_stack_format ()
 {
 	returned="$1"
 	results="$2"
@@ -174,35 +208,8 @@ testsuite_unit_stack ()
 	fi
 }
 
-testsuite_file_report_simple () ( : )
-testsuite_file_report_cov    () ( : )
-testsuite_file_report_spec ()
-{
-	cat <<-FILEHEADER
-
-		### $current_file
-	FILEHEADER
-}
-
-testsuite_unit_report_simple ()
-{
-	test_file="$1"
-	test_function="$2"
-	returned="$3"
-	results="$4"
-		
-	if [ $returned = 0 ]; then
-		echo -n "."
-	else
-		echo -n "E"
-	fi
-}
-
-# Executes a test on a test function
-testsuite_exec_spec   () ( testsuite_exec "$1" "$2" "basename" )
-testsuite_exec_simple () ( testsuite_exec "$1" "$2" "basename" )
-testsuite_exec_cov    () ( testsuite_exec "$1" "$2" "echo" )
-testsuite_exec ()
+# Executes a test passing a filter to the stack
+testsuite_stack_collect ()
 {
 	test_file="$1"
 	test_function="$2"
@@ -210,16 +217,18 @@ testsuite_exec ()
 
 	# Loads the test file and executes the test in another shell instance
 
-	testsuite_external "$test_file" "$file_filter" 2>&1 >/dev/null
+	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 >/dev/null
 	returned=$? # Return code for the test, saved for later
 
 	return $returned
 }
 
+# Executes a file on a function using an external shell process
 testsuite_external ()
 {
 	test_file="$1"
-	file_filter="$2"
+	test_function="$2"
+	file_filter="$3"
 
 	if [ z"$BASH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${BASH_SOURCE}\"):\${LINENO}	"
