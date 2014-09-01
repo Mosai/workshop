@@ -141,7 +141,7 @@ testsuite_post_cov ()
 				# Number of matches on this line
 				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l)"
 				# Formatted number of matched lines <tab> the file line
-				testsuite_post_cov_line "$lineno" "$pureline" "$matched"
+				testsuite_post_cov_line "$lineno" "$pureline" "$matched" "$file"
 			done
 			IFS= # Restore separator
 		fi
@@ -153,6 +153,7 @@ testsuite_post_cov_line ()
 	lineno="$1"
 	pureline="$2"
 	matched="$3"
+	file="$4"
 
 	# Ignore comment lines
 	if [ -z "$(echo "$pureline" | sed '/^\s*#/d')" ]        ||
@@ -170,11 +171,11 @@ testsuite_post_cov_line ()
 	   [ -z "$(echo "$pureline" | sed '/^\s*[a-zA-Z0-9_]*\s*()$/d')" ] ||
 	# Ignore blank lines
 	   [ -z "$(echo "$pureline" | sed '/^\s*$/d')" ]; then
-		echo "-	$pureline"
+		echo "$(basename $file)	-	$pureline"
 		return
 	fi
 
-	echo "$matched	$pureline"
+	echo "$(basename $file)	$matched	$pureline"
 }
 
 # Run tests from a STDIN list

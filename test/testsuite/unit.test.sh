@@ -13,8 +13,10 @@ test_testsuite_empty_call ()
 test_testsuite_help ()
 {
 	help_call="$(testsuite help)"
+	returned_code=$?
 
-	[ ! -z "$help_call" ]
+	[ ! -z "$help_call" ] &&
+	[ $returned_code = 0 ]
 }
 
 test_testsuite_list_using_files ()
@@ -93,15 +95,15 @@ test_testsuite_postcov_counts_lines_properly ()
 	check ()
 	{
 		output="$($real_cat)"
-		traced_lines="$(echo "$output" | grep "^-" | wc -l)"
-		zeroed_lines="$(echo "$output" | grep "^0" | wc -l)"
-		covered="$(echo "$output" | grep "^1" | wc -l)"
-		doubled="$(echo "$output" | grep "^2" | wc -l)"
+		traced_lines="$(echo "$output" | cut -d"	" -f2 | grep "^-" | wc -l)"
+		zeroed_lines="$(echo "$output" | cut -d"	" -f2 | grep "^0" | wc -l)"
+		covered="$(echo "$output" | cut -d"	" -f2 | grep "^1" | wc -l)"
+		doubled="$(echo "$output" | cut -d"	" -f2 | grep "^2" | wc -l)"
 
-		[ "$traced_lines" = "12" ] &&
-		[ "$zeroed_lines" = "1" ] &&
-		[ "$covered" = "2" ] &&
-		[ "$doubled" = "1" ]
+		[ $traced_lines = 12 ] &&
+		[ $zeroed_lines = 1 ] &&
+		[ $covered = 2 ] &&
+		[ $doubled = 1 ]
 	}
 
 	testsuite_post_cov | check
@@ -157,8 +159,8 @@ test_testsuite_process_with_multiple_tests ()
 		unit_report_results="$(echo "$result" | grep "^unit_report_mock called" | wc -l)"
 		last_line="$(echo "$result" | tail -n 1)"
 
-		[ "$file_report_results" = "2" ] &&
-		[ "$unit_report_results" = "4" ] &&
+		[ $file_report_results = 2 ] &&
+		[ $unit_report_results = 4 ] &&
 		[ "$last_line" = "4 tests out of 4 passed." ]
 	}
 
@@ -201,8 +203,8 @@ test_testsuite_process_with_mixed_failures ()
 		unit_report_results="$(echo "$result" | grep "^unit_report_mock called" | wc -l)"
 		last_line="$(echo "$result" | tail -n 1)"
 
-		[ "$file_report_results" = "2" ] &&
-		[ "$unit_report_results" = "4" ] &&
+		[ $file_report_results = 2 ] &&
+		[ $unit_report_results = 4 ] &&
 		[ "$last_line" = "2 tests out of 4 passed." ]
 	}
 
@@ -232,7 +234,7 @@ template_testsuite_unit_report ()
 	result="$(testsuite_unit_report_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
 	pass_results="$(echo "$result" | grep "$expected_string" | wc -l)"
 
-	[ "$pass_results" = 1 ]
+	[ $pass_results = 1 ]
 }
 
 test_testsuite_unit_report_spec_success ()
@@ -320,5 +322,5 @@ test_testsuite_unit_report_cov ()
 	result="$(testsuite_unit_report_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
 	line_count="$(echo "$result" |  grep somefile.sh | wc -l)"
 
-	[ "$line_count" = 3 ]
+	[ $line_count = 3 ]
 }
