@@ -95,11 +95,13 @@ test_testsuite_postcov_counts_lines_properly ()
 	check ()
 	{
 		output="$($real_cat)"
+		traced_lines="$(echo "$output" | grep "^-" | wc -l)"
 		zeroed_lines="$(echo "$output" | grep "^0" | wc -l)"
 		covered="$(echo "$output" | grep "^1" | wc -l)"
 		doubled="$(echo "$output" | grep "^2" | wc -l)"
 
-		[ "$zeroed_lines" = "13" ] &&
+		[ "$traced_lines" = "12" ] &&
+		[ "$zeroed_lines" = "1" ] &&
 		[ "$covered" = "2" ] &&
 		[ "$doubled" = "1" ]
 	}
@@ -237,7 +239,7 @@ test_testsuite_unit_report_spec_fail ()
 
 test_testsuite_unit_report_run_fail ()
 {
-	template_testsuite_unit_report run 1 "E"
+	template_testsuite_unit_report run 1 "F"
 }
 
 test_testsuite_unit_report_run_success ()

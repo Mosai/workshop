@@ -105,21 +105,21 @@ that support the rich stack traces.
 This is an excerpt from the `$ bin/testsuite cov test/` output:
 
 ```
-	testsuite_run ()
-	{
+-	testsuite_run ()
+-	{
 1		target="$1"
 2		testsuite_list "$target" | testsuite_process simple "$target"
-	}
+-	}
 	
-2	# Run tests and display results as specs
-	testsuite_spec ()
+-	# Run tests and display results as specs
+-	testsuite_spec ()
 1	{
 1		target="$1"
 2		testsuite_list "$target" | testsuite_process spec "$target"
-	}
+-	}
 
 
 ``` 
 
 The number on the left is the number of passes that 
-each specific line had.
+each specific line had. 

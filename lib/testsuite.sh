@@ -43,7 +43,7 @@ testsuite_unit_report_run ()
 	if [ $returned = 0 ]; then
 		echo -n "."
 	else
-		echo -n "E"
+		echo -n "F"
 	fi
 }
 
@@ -59,7 +59,7 @@ testsuite_exec_spec () ( testsuite_stack_collect "$1" "$2" "basename" )
 testsuite_file_report_spec ()
 {
 	current_file="$1"
-	
+
 	cat <<-FILEHEADER
 
 		### $current_file
@@ -144,11 +144,40 @@ testsuite_post_cov ()
 				# Number of matches on this line
 				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l)"
 				# Formatted number of matched lines <tab> the file line
-				echo "$matched	$pureline"
+				testsuite_post_cov_line "$lineno" "$pureline" "$matched"
 			done
 			IFS= # Restore separator
 		fi
 	done
+}
+
+testsuite_post_cov_line ()
+{
+	lineno="$1"
+	pureline="$2"
+	matched="$3"
+
+	# Ignore comment lines
+	if [ -z "$(echo "$pureline" | sed '/^\s*#/d')" ]        ||
+	# Ignore lines with only a '{'
+	   [ -z "$(echo "$pureline" | sed '/^\s*{\s*$/d')" ]    ||
+	# Ignore lines with only a '}'
+	   [ -z "$(echo "$pureline" | sed '/^\s*}\s*$/d')" ]    ||
+	# Ignore lines with only a 'fi'
+	   [ -z "$(echo "$pureline" | sed '/^\s*fi\s*$/d')" ]   ||
+	# Ignore lines with only a 'done'
+	   [ -z "$(echo "$pureline" | sed '/^\s*done\s*$/d')" ] ||
+	# Ignore lines with only a 'else'
+	   [ -z "$(echo "$pureline" | sed '/^\s*else\s*$/d')" ] ||
+	# Ignore lines with only a function declaration
+	   [ -z "$(echo "$pureline" | sed '/^\s*[a-zA-Z0-9_]*\s*()$/d')" ] ||
+	# Ignore blank lines
+	   [ -z "$(echo "$pureline" | sed '/^\s*$/d')" ]; then
+		echo "-	$pureline"
+		return
+	fi
+
+	echo "$matched	$pureline"
 }
 
 # Run tests from a STDIN list
