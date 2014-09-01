@@ -13,10 +13,8 @@ test_testsuite_empty_call ()
 test_testsuite_help ()
 {
 	help_call="$(testsuite help)"
-	returned_code=$?
 
-	[ ! -z "$help_call" ] &&
-	[ $returned_code = 0 ]
+	[ ! -z "$help_call" ]
 }
 
 test_testsuite_list_using_files ()
