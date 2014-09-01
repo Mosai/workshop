@@ -93,10 +93,13 @@ testsuite_unit_report_spec ()
 	# Removes the 'test_' from the start of the name
 	test_function=${test_function#test_}
 
+	# Displays the test status and humanized test name
+	# replacing _ to spaces
 	cat <<-NAME | tr '_' ' '
 		  - $test_status $test_function
 	NAME
 
+	# Formats a stack trace with the test results
 	testsuite_stack_format "$returned" "$results"
 }
 
@@ -119,32 +122,43 @@ testsuite_unit_report_cov ()
 	returned="$3"
 	results="$4"
 
-	echo "$results"    | 
+	echo "$results"    |
+		# Remove non-stack lines (stack lines start with +) 
 		sed '/^[^+]/d' |
-		cut -d"	" -f2  |
-		sed '/^:/d;/^\s*$/d;s/:/	/g'
+		# Gets only the file:lineno column
+		cut -d"	" -f2  | 
+		# Removes empty lines and lines without file names,
+		# change the : into a tab.
+		sed '/^:/d;   /^\s*$/d;   s/:/	/g' 
 }
 # Post-processes unit stacks into coverage info
 testsuite_post_cov ()
 {
+	# Should contain a list of files and lines covered
 	unsorted="$(cat)"
+	# Gets an unique list of files
 	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
 
 	for file in $covered_files; do
 		if [ -f $file ]; then
 
+			# Gets lines only for this file
 			thisfile="$(echo "$unsorted" | grep "^$file")"
 
-			IFS='' 
-			sed '/./=' $file     | 
-			sed '/./N; s/\n/ /'  | 
+			IFS='' 					# Read line by line, not separator
+			sed '/./=' $file     |  # Number lines on file
+			sed '/./N; s/\n/ /'  |  # Format numbered lines
 			while read file_line; do
+				# Current line number
 				lineno="$(echo "$file_line" | cut -d" " -f1)"
+				# Full line text
 				pureline="$(echo "$file_line" | cut -d" " -f2-)"
+				# Number of matches on this line
 				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l)"
+				# Formatted number of matched lines <tab> the file line
 				echo "$matched	$pureline"
 			done
-			IFS=
+			IFS= # Restore separator
 		fi
 	done
 }
@@ -159,18 +173,22 @@ testsuite_process ()
 	last_file=""
 	current_file=""
 
+	# Each line should have a file and a test function on that file
 	while read test_parameters; do
 		current_file="$(echo "$test_parameters" | sed 's/ .*//')"
 
+		# Displays a file report when the file changes
 		if [ "$current_file" != "$last_file" ]; then
 			testsuite_file_report_$report_mode "$current_file"
 		fi
 
 		total_count=$((total_count+1))
 
+		# Runs a test and stores results
 		results="$(testsuite_exec_$report_mode $test_parameters)"
 		returned=$?
 
+		# Run the customized report
 		testsuite_unit_report_$report_mode $test_parameters "$returned" "$results"
 
 		if [ $returned = 0 ]; then
@@ -203,7 +221,9 @@ testsuite_stack_format ()
 
 	if [ $returned != 0 ]; then
 		echo "$results"   |
-		      sed '1d;$d' |
+			  # Removes the first and last lines
+		      sed '1d;$d' | 
+		      # Displays the stack in aligned columns
 		      awk 'BEGIN{FS=OFS="\t"}{ printf "   %-4s %-20s %-30s\n", $1, $2, $3}'
 	fi
 }
@@ -214,8 +234,6 @@ testsuite_stack_collect ()
 	test_file="$1"
 	test_function="$2"
 	file_filter="$3"
-
-	# Loads the test file and executes the test in another shell instance
 
 	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 >/dev/null
 	returned=$? # Return code for the test, saved for later
@@ -230,31 +248,34 @@ testsuite_external ()
 	test_function="$2"
 	file_filter="$3"
 
+	# Find out command to get file/line information on PS4 for
+	# each shell
 	if [ z"$BASH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${BASH_SOURCE}\"):\${LINENO}	"
 	elif [ "$testsuite_current_shell" = "pdksh" ]; then
-		trace_command="+	\${LINENO}	"
+		trace_command="+	[unknown]:\${LINENO}	"
 	elif [ z"$KSH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${.sh.file}\"):\${LINENO}	"
 	elif [ z"$ZSH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \${(%):-%x:%I})	"
 	else
-		trace_command="+	\${LINENO}	"
+		trace_command="+	[unknown]:\${LINENO}	" # Fallback
 	fi
 
+	# Executes the shell in a separate process
 	$testsuite_current_shell <<-EXTERNAL
-		. "$test_file"
-		current_file="$test_file"
-		command -v setopt 2>&1 >/dev/null && setopt SH_WORD_SPLIT
-		command -v setup 2>&1 >/dev/null  && setup "$test_file"
-		command -v setopt 2>&1 >/dev/null && setopt PROMPT_SUBST
-		PS4='$trace_command'
-		set -x
-		$test_function "$test_file"
-		has_passed="\$?"
-		set +x
-		command -v teardown 2>&1 >/dev/null && teardown "$test_file"
-		exit \$has_passed
+		# Enables compatibility options when needed
+		command -v setopt 2>&1 >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
+
+		current_file="$test_file" # Stores the current file
+		. "$test_file"            # Loads the file
+		PS4='$trace_command'      # Injects the debug prompt
+		set -x                    # Enables debugging
+		$test_function            # Executes the function
+		has_passed="\$?"          # Stores the returned code
+		set +x                    # Disables debugging
+		exit \$has_passed         # Exits with the test results
+
 	EXTERNAL
 }
 

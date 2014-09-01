@@ -1,8 +1,4 @@
-setup ()
-{
-	current_file="$1"
-	. "$(dirname $current_file)/../../lib/testsuite.sh"
-}
+. "$(dirname $current_file)/../../lib/testsuite.sh"
 
 test_testsuite_empty_call ()
 {
