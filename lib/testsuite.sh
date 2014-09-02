@@ -251,9 +251,8 @@ testsuite_stack_collect ()
 	file_filter="$3"
 
 	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 
-	returned=$? # Return code for the test, saved for later
-
-	return $returned
+	
+	return $?
 }
 
 # Executes a file on a function using an external shell process
@@ -296,6 +295,8 @@ testsuite_external ()
 		exit \$has_passed         # Exits with the test results
 
 	EXTERNAL
+
+	echo "" # Needed for ksh
 }
 
 # Lists test functions in the specified path

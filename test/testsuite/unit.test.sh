@@ -180,8 +180,6 @@ test_testsuite_process_with_mixed_failures ()
 
 	testsuite_exec_mock () 
 	{
-		echo "exec mock called $@"
-
 		if [ "$2" = 'test_should_always_pass2' ];then
 			return 1
 		else
