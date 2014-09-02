@@ -250,7 +250,7 @@ testsuite_stack_collect ()
 	test_function="$2"
 	file_filter="$3"
 
-	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 >/dev/null
+	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 
 	returned=$? # Return code for the test, saved for later
 
 	return $returned
@@ -291,7 +291,7 @@ testsuite_external ()
 		set -x                    # Enables debugging
 		. "$test_file"            # Loads the file
 		$test_function            # Executes the function
-		has_passed="\$?"          # Stores the returned code
+		has_passed=\$?            # Stores the returned code
 		set +x                    # Disables debugging
 		exit \$has_passed         # Exits with the test results
 

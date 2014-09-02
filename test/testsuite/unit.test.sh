@@ -12,7 +12,7 @@ test_testsuite_empty_call ()
 
 test_testsuite_help ()
 {
-	help_call="$(testsuite help)"
+	help_call="$(testsuite help | cat)"
 	returned_code=$?
 
 	[ ! -z "$help_call" ] &&
@@ -80,11 +80,10 @@ test_testsuite_cov ()
 test_testsuite_postcov_counts_lines_properly ()
 {
 	testsuite_file_pattern=".fixture.sh"
-	real_cat="$(which cat)"
 	
-	cat () 
+	output () 
 	{
-		$real_cat <<-INPUT
+		cat <<-INPUT
 			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	4
 			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	9
 			$(dirname $current_file)/resources/testsuite_postcov.fixture.sh	9
@@ -94,7 +93,7 @@ test_testsuite_postcov_counts_lines_properly ()
 
 	check ()
 	{
-		output="$($real_cat)"
+		output="$(cat | cat)"
 		traced_lines="$(echo "$output" | grep "^-" | wc -l)"
 		zeroed_lines="$(echo "$output" | grep "^0" | wc -l)"
 		covered="$(echo "$output" | grep "^1" | wc -l)"
@@ -104,9 +103,11 @@ test_testsuite_postcov_counts_lines_properly ()
 		[ $zeroed_lines = 1 ] &&
 		[ $covered = 2 ] &&
 		[ $doubled = 1 ]
+
+		exit $?
 	}
 
-	testsuite_post_cov | check
+	output | testsuite_post_cov | check
 }
 
 test_testsuite_process_with_single_test ()
@@ -119,7 +120,7 @@ test_testsuite_process_with_single_test ()
 
 	check () 
 	{
-		result=$(cat)
+		result="$(cat)"
 		file_report_results="$(echo "$result" | grep "^file_report_mock called")"
 		unit_report_results="$(echo "$result" | grep "^unit_report_mock called")"
 		last_line="$(echo "$result" | tail -n 1)"
@@ -127,6 +128,8 @@ test_testsuite_process_with_single_test ()
 		[ "$file_report_results" = "file_report_mock called" ] &&
 		[ "$unit_report_results" = "unit_report_mock called" ] &&
 		[ "$last_line" = "1 tests out of 1 passed." ]
+
+		exit $?
 	}
 
 	echo $file_mock_location | 
@@ -154,7 +157,7 @@ test_testsuite_process_with_multiple_tests ()
 
 	check () 
 	{
-		result=$(cat)
+		result="$(cat)"
 		file_report_results="$(echo "$result" | grep "^file_report_mock called" | wc -l)"
 		unit_report_results="$(echo "$result" | grep "^unit_report_mock called" | wc -l)"
 		last_line="$(echo "$result" | tail -n 1)"
@@ -162,6 +165,8 @@ test_testsuite_process_with_multiple_tests ()
 		[ $file_report_results = 2 ] &&
 		[ $unit_report_results = 4 ] &&
 		[ "$last_line" = "4 tests out of 4 passed." ]
+
+		exit $?
 	}
 
 	mocklist | 
@@ -198,7 +203,7 @@ test_testsuite_process_with_mixed_failures ()
 
 	check () 
 	{
-		result=$(cat)
+		result="$(cat | cat)"
 		file_report_results="$(echo "$result" | grep "^file_report_mock called" | wc -l)"
 		unit_report_results="$(echo "$result" | grep "^unit_report_mock called" | wc -l)"
 		last_line="$(echo "$result" | tail -n 1)"
@@ -206,6 +211,8 @@ test_testsuite_process_with_mixed_failures ()
 		[ $file_report_results = 2 ] &&
 		[ $unit_report_results = 4 ] &&
 		[ "$last_line" = "2 tests out of 4 passed." ]
+
+		exit $?
 	}
 
 	mocklist | 
@@ -270,6 +277,7 @@ template_testsuite_exec ()
 		result="$(cat)"
 
 		[ "$result" = "collect called /foo/bar foo_bar $expected" ]
+		exit $?
 	}
 
 	testsuite_exec_$mode "/foo/bar" "foo_bar" | check
@@ -292,13 +300,9 @@ test_testsuite_exec_cov ()
 
 test_testsuite_file_report_spec ()
 {
-	check () 
-	{
-		result="$(cat | tail -n 1)"
+	result="$(testsuite_file_report_spec "/foo/bar" | tail -n 1)"
 
-		[ "$result" = "### /foo/bar" ]
-	}
-	testsuite_file_report_spec "/foo/bar" | check
+	[ "$result" = "### /foo/bar" ]
 }
 
 test_testsuite_unit_report_cov ()
@@ -317,10 +321,10 @@ test_testsuite_unit_report_cov ()
 			++  :3				This line should be removed
 		RESULTS
 	}
-	unit_results=$(unit_results_mock)
+	unit_results=$(unit_results_mock | cat)
 
 	result="$(testsuite_unit_report_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
-	line_count="$(echo "$result" |  grep somefile.sh | wc -l)"
+	line_count="$(echo "$result" |  grep somefile.sh | wc -l )"
 
 	[ $line_count = 3 ]
 }
