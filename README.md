@@ -27,9 +27,9 @@ Windows:
 The Tools
 ---------
 
-### testsuite
+### posit
 
-Testsuite can run tests written as shell functions. A test look likes this:
+posit can run tests written as shell functions. A test look likes this:
 
 ```sh
 test_tr_can_replace_fancy_chars ()
@@ -45,21 +45,21 @@ passes when its function returns a successful code.
 
 #### Test Runner
 
-You can run tests using the `$ bin/testsuite` tool from this package. This is 
+You can run tests using the `$ bin/posit` tool from this package. This is 
 how the runner output is presented:
 
 ```
-$ bin/testsuite run test/
-### test/testsuite/unit.test.sh
-  - pass: testsuite empty call
-  - pass: testsuite help
-  - pass: testsuite list using files
-  - pass: testsuite list using directories
-  - pass: testsuite list without parameters
-  - pass: testsuite run
-  - pass: testsuite spec
-  - pass: testsuite cov
-  - pass: testsuite postcov counts lines properly
+$ bin/posit run test/
+### test/posit/unit.test.sh
+  - pass: posit empty call
+  - pass: posit help
+  - pass: posit list using files
+  - pass: posit list using directories
+  - pass: posit list without parameters
+  - pass: posit run
+  - pass: posit spec
+  - pass: posit cov
+  - pass: posit postcov counts lines properly
 
 9 tests out of 9 passed.
 ```
@@ -69,26 +69,26 @@ so you don't need to redirect it to `/dev/null` by yourself.
 
 #### Stack Traces
 
-When an error is returned from a test function, testsuite displays a handy stack trace
+When an error is returned from a test function, posit displays a handy stack trace
 for the test (available on zsh, bash and ksh):
 
 ```
-### test/testsuite/unit.test.sh
-  - fail: testsuite empty call
+### test/posit/unit.test.sh
+  - fail: posit empty call
    +    unit.test.sh:12      dispatched=+                  
-   +    testsuite.sh:18      testsuite_demo 1 2 3          
+   +    posit.sh:18      posit_demo 1 2 3          
    +    :3                   echo 'OK 1' 2 3               
    +    unit.test.sh:12      dispatched='OK 1 2 3'         
    +    unit.test.sh:14      [ 'OK 1 2 3' '=' 'OK 1 2 ' ']'
    +    zsh:9                has_passed=1                  
-  - pass: testsuite help
-  - pass: testsuite list using files
-  - pass: testsuite list using directories
-  - pass: testsuite list without parameters
-  - pass: testsuite run
-  - pass: testsuite spec
-  - pass: testsuite cov
-  - pass: testsuite postcov counts lines properly
+  - pass: posit help
+  - pass: posit list using files
+  - pass: posit list using directories
+  - pass: posit list without parameters
+  - pass: posit run
+  - pass: posit spec
+  - pass: posit cov
+  - pass: posit postcov counts lines properly
 
 8 tests out of 9 passed.
 
@@ -102,20 +102,20 @@ line numbers.
 Experimental code coverage reports are available for shells
 that support the rich stack traces. 
 
-This is an excerpt from the `$ bin/testsuite cov test/` output:
+This is an excerpt from the `$ bin/posit cov test/` output:
 
 ```
--	testsuite_run ()
+-	posit_run ()
 -	{
 1		target="$1"
-2		testsuite_list "$target" | testsuite_process simple "$target"
+2		posit_list "$target" | posit_process simple "$target"
 -	}
 	
 -	# Run tests and display results as specs
--	testsuite_spec ()
+-	posit_spec ()
 1	{
 1		target="$1"
-2		testsuite_list "$target" | testsuite_process spec "$target"
+2		posit_list "$target" | posit_process spec "$target"
 -	}
 
 

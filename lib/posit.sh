@@ -1,17 +1,17 @@
 # File name pattern for test files
-testsuite_file_pattern="*.test.sh"	
+posit_file_pattern="*.test.sh"	
 
-# Dispatches commands to other testsuite_ functions
-testsuite () ( testsuite_"$@" )
+# Dispatches commands to other posit_ functions
+posit () ( posit_"$@" )
 
 # Placeholder for empty calls
-testsuite_ () ( echo "No command provided. Try 'testsuite help'" 1>&2; return 1 )
+posit_ () ( echo "No command provided. Try 'posit help'" 1>&2; return 1 )
 
 # Provides help
-testsuite_help ()
+posit_help ()
 {
 	cat <<-HELP
-		Usage: testsuite [command]
+		Usage: posit [command]
 
 		Commands: run   [path]        Run tests for the specified path
 		          spec  [path]        Run tests and display results as specs
@@ -22,18 +22,18 @@ testsuite_help ()
 	HELP
 }
 
-# Main function for the `testsuite run` report
-testsuite_run ()
+# Main function for the `posit run` report
+posit_run ()
 {
 	target="$1"
-	testsuite_list "$target" | testsuite_process run "$target"
+	posit_list "$target" | posit_process run "$target"
 }
 # Executes a single test
-testsuite_exec_run () ( testsuite_stack_collect "$1" "$2" "basename" )
+posit_exec_run () ( posit_stack_collect "$1" "$2" "basename" )
 # Reports a test file
-testsuite_file_report_run () ( : )
+posit_file_report_run () ( : )
 # Reports a single unit
-testsuite_unit_report_run ()
+posit_unit_report_run ()
 {
 	test_file="$1"
 	test_function="$2"
@@ -47,16 +47,16 @@ testsuite_unit_report_run ()
 	fi
 }
 
-# Main function for the `testsuite spec` report
-testsuite_spec ()
+# Main function for the `posit spec` report
+posit_spec ()
 {
 	target="$1"
-	testsuite_list "$target" | testsuite_process spec "$target"
+	posit_list "$target" | posit_process spec "$target"
 }
 # Executes a single test
-testsuite_exec_spec () ( testsuite_stack_collect "$1" "$2" "basename" )
+posit_exec_spec () ( posit_stack_collect "$1" "$2" "basename" )
 # Reports a test file
-testsuite_file_report_spec ()
+posit_file_report_spec ()
 {
 	current_file="$1"
 
@@ -66,7 +66,7 @@ testsuite_file_report_spec ()
 	FILEHEADER
 }
 # Reports a single unit
-testsuite_unit_report_spec ()
+posit_unit_report_spec ()
 {
 	test_file="$1"
 	test_function="$2"
@@ -88,22 +88,22 @@ testsuite_unit_report_spec ()
 	NAME
 
 	# Formats a stack trace with the test results
-	testsuite_stack_format "$returned" "$results"
+	posit_stack_format "$returned" "$results"
 }
 
-# Main function for the `testsuite cov` report
-testsuite_cov ()
+# Main function for the `posit cov` report
+posit_cov ()
 {
 	target="$1"
-	testsuite_list "$target" | testsuite_process cov "$target" |
-	testsuite_post_cov
+	posit_list "$target" | posit_process cov "$target" |
+	posit_post_cov
 }
 # Executes a single test
-testsuite_exec_cov () ( testsuite_stack_collect "$1" "$2" "echo" )
+posit_exec_cov () ( posit_stack_collect "$1" "$2" "echo" )
 # Reports a test file
-testsuite_file_report_cov () ( : )
+posit_file_report_cov () ( : )
 # Reports a single unit
-testsuite_unit_report_cov ()
+posit_unit_report_cov ()
 {
 	results="$4"
 
@@ -117,7 +117,7 @@ testsuite_unit_report_cov ()
 		sed '/^:/d;   /^\s*$/d;   s/:/	/' 
 }
 # Post-processes unit stacks into coverage info
-testsuite_post_cov ()
+posit_post_cov ()
 {
 	# Should contain a list of files and lines covered
 	unsorted="$(cat)"
@@ -141,14 +141,14 @@ testsuite_post_cov ()
 				# Number of matches on this line
 				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l | sed "s/[	 ]*//")"
 				# Formatted number of matched lines <tab> the file line
-				testsuite_post_cov_line "$lineno" "$pureline" "$matched" "$file"
+				posit_post_cov_line "$lineno" "$pureline" "$matched" "$file"
 			done
 			IFS= # Restore separator
 		fi
 	done
 }
 
-testsuite_post_cov_line ()
+posit_post_cov_line ()
 {
 	lineno="$1"
 	pureline="$2"
@@ -179,7 +179,7 @@ testsuite_post_cov_line ()
 }
 
 # Run tests from a STDIN list
-testsuite_process ()
+posit_process ()
 {
 	report_mode="$1"
 	target="$2"
@@ -194,17 +194,17 @@ testsuite_process ()
 
 		# Displays a file report when the file changes
 		if [ "$current_file" != "$last_file" ]; then
-			testsuite_file_report_$report_mode "$current_file"
+			posit_file_report_$report_mode "$current_file"
 		fi
 
 		total_count=$((total_count+1))
 
 		# Runs a test and stores results
-		results="$(testsuite_exec_$report_mode $test_parameters)"
+		results="$(posit_exec_$report_mode $test_parameters)"
 		returned=$?
 
 		# Run the customized report
-		testsuite_unit_report_$report_mode $test_parameters "$returned" "$results"
+		posit_unit_report_$report_mode $test_parameters "$returned" "$results"
 
 		if [ $returned = 0 ]; then
 			passed_count=$((passed_count+1))
@@ -229,7 +229,7 @@ testsuite_process ()
 }
 
 # Formats a stack to be displayed
-testsuite_stack_format ()
+posit_stack_format ()
 {
 	returned="$1"
 	results="$2"
@@ -244,33 +244,33 @@ testsuite_stack_format ()
 }
 
 # Executes a test passing a filter to the stack
-testsuite_stack_collect ()
+posit_stack_collect ()
 {
 	test_file="$1"
 	test_function="$2"
 	file_filter="$3"
 
-	testsuite_external "$test_file" "$test_function" "$file_filter" 2>&1 
+	posit_external "$test_file" "$test_function" "$file_filter" 2>&1
 	
 	return $?
 }
 
 # Executes a file on a function using an external shell process
-testsuite_external ()
+posit_external ()
 {
 	test_file="$1"
 	test_function="$2"
 	file_filter="$3"
 
-	testsuite_find_current_shell
+	posit_find_current_shell
 
 	# Find out command to get file/line information on PS4 for
 	# each shell
 	if [ z"$BASH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${BASH_SOURCE}\"):\${LINENO}	"
-	elif [ "$testsuite_current_shell" = "pdksh" ]; then
+	elif [ "$posit_current_shell" = "pdksh" ]; then
 		trace_command="+	[unknown]:\${LINENO}	"
-	elif [ "$testsuite_current_shell" = "mksh" ]; then
+	elif [ "$posit_current_shell" = "mksh" ]; then
 		trace_command="+	[unknown]:\${LINENO}	"
 	elif [ z"$KSH_VERSION" != z ]; then
 		trace_command="+	\$($file_filter \"\${.sh.file}\"):\${LINENO}	"
@@ -281,7 +281,7 @@ testsuite_external ()
 	fi
 
 	# Executes the shell in a separate process
-	$testsuite_current_shell <<-EXTERNAL
+	$posit_current_shell <<-EXTERNAL
 		# Enables compatibility options when needed
 		command -v setopt 2>/dev/null >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
 
@@ -295,36 +295,34 @@ testsuite_external ()
 		exit \$has_passed         # Exits with the test results
 
 	EXTERNAL
-
-	echo "" # Needed for ksh
 }
 
 # Lists test functions in the specified path
-testsuite_list ()
+posit_list ()
 {
 	target="$1"
 
 	if   [ -f "$target" ]; then
-		testsuite_listfile "$target"
+		posit_listfile "$target"
 	elif [ -d "$target" ]; then
-		testsuite_listdir "$target"
+		posit_listdir "$target"
 	fi
 }
 
 # Lists test functions for a specified dir
-testsuite_listdir ()
+posit_listdir ()
 {
 	target_dir="$1"
 
-	find "$target_dir" -type f -name "$testsuite_file_pattern" |
+	find "$target_dir" -type f -name "$posit_file_pattern" |
 	grep -v "\.example\." |
 	while read test_file; do
-		testsuite_listfile "$test_file"
+		posit_listfile "$test_file"
 	done
 }
 
 # Lists test functions in a single file
-testsuite_listfile ()
+posit_listfile ()
 {
 	target_file="$1"
 	signature="/^\(test_[a-zA-Z0-9_]*\)[	 ]*/p"
@@ -335,26 +333,26 @@ testsuite_listfile ()
 		done
 }
 
-testsuite_find_current_shell () 
+posit_find_current_shell () 
 {
-	if [ -z "$testsuite_current_shell" ]; then
+	if [ -z "$posit_current_shell" ]; then
 		# File name pattern for test files
-		testsuite_file_pattern="*.test.sh"
+		posit_file_pattern="*.test.sh"
 		# Saves the current shell command for future use
-		testsuite_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
+		posit_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
 		# Some shells are reported with a dash 
-		testsuite_current_shell="${testsuite_current_shell#-}"
+		posit_current_shell="${posit_current_shell#-}"
 
 		# Falls back to $SHELL when no valid command found
-		if [ -z "$(command -v "$testsuite_current_shell")" ]; then
-			testsuite_current_shell="$SHELL"
+		if [ -z "$(command -v "$posit_current_shell")" ]; then
+			posit_current_shell="$SHELL"
 		fi
 
 		# Fixes incomplete ps output for the busybox sh
-		if [ "$testsuite_current_shell" = "busybox" ]; then
-			testsuite_current_shell="busybox sh"
+		if [ "$posit_current_shell" = "busybox" ]; then
+			posit_current_shell="busybox sh"
 		fi
 
-		export testsuite_current_shell="$testsuite_current_shell"
+		export posit_current_shell="$posit_current_shell"
 	fi
 }

@@ -1,7 +1,7 @@
 Testing Mosai Workshop
 ----------------------
 
-Workshop is tested by its own testing tool `testsuite`. Although 
+Workshop is tested by its own testing tool `posit`. Although 
 the tool itself doesn't force any particular directory structure, 
 we keep an in-house one:
 
