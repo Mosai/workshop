@@ -4,44 +4,71 @@
 language: bash
 
 # List of shells for testing
-env:
-  - TARGET_SHELL="bash"        SHELL_PKG="bash"
-  - TARGET_SHELL="dash"        SHELL_PKG="dash"
-  - TARGET_SHELL="zsh"         SHELL_PKG="zsh"
-  - TARGET_SHELL="pdksh"       SHELL_PKG="pdksh"
-  - TARGET_SHELL="ksh"         SHELL_PKG="ksh"
-  - TARGET_SHELL="busybox sh"  SHELL_PKG="busybox"
-  - TARGET_SHELL="mksh"        SHELL_PKG="mksh"
-  - TARGET_SHELL="zsh-beta"    SHELL_PKG="zsh-beta"
+matrix:
+  include:
+    # Ubuntu
+    - os: linux
+      env: TARGET_SHELL="bash"        SHELL_PKG="bash"
+    - os: linux
+      env: TARGET_SHELL="dash"        SHELL_PKG="dash"
+    - os: linux
+      env: TARGET_SHELL="zsh"         SHELL_PKG="zsh"
+    - os: linux
+      env: TARGET_SHELL="pdksh"       SHELL_PKG="pdksh"
+    - os: linux
+      env: TARGET_SHELL="ksh"         SHELL_PKG="ksh"
+    - os: linux
+      env: TARGET_SHELL="busybox sh"  SHELL_PKG="busybox"
+    - os: linux
+      env: TARGET_SHELL="mksh"        SHELL_PKG="mksh"
+    - os: linux
+      env: TARGET_SHELL="zsh-beta"    SHELL_PKG="zsh-beta"
+    # Older versions of bash from Ubuntu ppa
+    - os: linux
+      env: TARGET_SHELL="bash2.05b"   SHELL_PKG="bash2.05b"  PPA_REQUIRED=yes
+    - os: linux
+      env: TARGET_SHELL="bash3.0.16"  SHELL_PKG="bash3.0.16" PPA_REQUIRED=yes
+    - os: linux
+      env: TARGET_SHELL="bash3.2.48"  SHELL_PKG="bash3.2.48" PPA_REQUIRED=yes
+    - os: linux
+      env: TARGET_SHELL="bash4.2.45"  SHELL_PKG="bash4.2.45" PPA_REQUIRED=yes
+    # OS X
+    - os:  osx
+      env: TARGET_SHELL="bash"
+    - os:  osx
+      env: TARGET_SHELL="bash"  SHELL_PKG="bash"
+    - os:  osx
+      env: TARGET_SHELL="zsh"   SHELL_PKG="zsh"
+    - os:  osx
+      env: TARGET_SHELL="ksh"   SHELL_PKG="ksh"
+    - os:  osx
+      env: TARGET_SHELL="mksh"  SHELL_PKG="mksh"
 
-  # Older versions of bash from ppa
-  - TARGET_SHELL="bash2.05b"   SHELL_PKG="bash2.05b"  PPA_REQUIRED=true
-  - TARGET_SHELL="bash3.0.16"  SHELL_PKG="bash3.0.16" PPA_REQUIRED=true
-  - TARGET_SHELL="bash3.2.48"  SHELL_PKG="bash3.2.48" PPA_REQUIRED=true
-  - TARGET_SHELL="bash4.2.45"  SHELL_PKG="bash4.2.45" PPA_REQUIRED=true
+# List of operating systems
+os:
+  - linux
+  - osx
 
 # Template for installation of each test env
 # see the env: section
 before_install:
   # Sets a PPA from other release
   # 1 - Adds a key manually. We need to avoid add-apt-repository
-  - $PPA_REQUIRED && sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F5751EC8
+  - if [ "yes" = "$PPA_REQUIRED" ]; then sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F5751EC8; fi
   # 2 - Registers it on the apt source
-  - $PPA_REQUIRED && sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/agriffis/bashes/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"
+  - if [ "yes" = "$PPA_REQUIRED" ]; then sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/agriffis/bashes/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"; fi
 
   # Updates the index
-  - sudo apt-get update -qq
+  - if [ "Linux" = "$(uname -s)" ]; then sudo apt-get update -qq; fi
   # Installs only the packages required for the env
-  - sudo apt-get install -y $SHELL_PKG
+  - if [ "Linux" = "$(uname -s)" ]; then sudo apt-get install -y $SHELL_PKG; fi
+
+  # Updates the index
+  - if [ "Darwin" = "$(uname -s)" ]; then brew update; fi
+  # Installs only the packages required for the env
+  - if [ "Darwin" = "$(uname -s)" ]; then if [ ! -z "$SHELL_PKG" ]; then brew install $SHELL_PKG; fi; fi
 
 # see the env: section
 script:
   # Runs the script in the shell declared by env
   - $TARGET_SHELL bin/testsuite spec test/
-
-matrix:
-  # These envs can fail
-  allow_failures:
-    # ksh hangs in the first test for no reason, only on Travis.
-    - env: TARGET_SHELL="ksh"         SHELL_PKG="ksh"
-    - env: TARGET_SHELL="zsh-beta"    SHELL_PKG="zsh-beta"
