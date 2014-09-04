@@ -1,0 +1,12 @@
+#/usr/bin/env sh
+
+# Gets the lib folder relative to this script location
+# If this script is in /foo/bin, points to /foo/lib
+depur_path="$(cd "$(dirname "$0")/../lib";pwd)"
+
+. "$depur_path/depur.sh" || exit 1
+
+# Enables word split on zsh
+command -v setopt 2>&1 >/dev/null && setopt SH_WORD_SPLIT
+
+depur "$@"

@@ -1,4 +1,5 @@
 . "$POSIT_DIR/../../lib/posit.sh"
+. "$POSIT_DIR/../../lib/depur.sh"
 
 test_posit_empty_call ()
 {
@@ -72,12 +73,12 @@ test_posit_spec ()
 
 test_posit_cov ()
 {
-	posit_post_cov () ( cat )
+	depur_coverage () ( cat )
 
 	template_posit_runner "cov" "cov"
 }
 
-test_posit_postcov_counts_lines_properly ()
+test_depur_coverage_counts_lines_properly ()
 {
 	posit_file_pattern=".fixture.sh"
 	
@@ -90,6 +91,8 @@ test_posit_postcov_counts_lines_properly ()
 			$POSIT_DIR/resources/posit_postcov2.fixture.sh	9
 		INPUT
 	}
+
+	depur_clean () ( cat )
 
 	check ()
 	{
@@ -107,7 +110,7 @@ test_posit_postcov_counts_lines_properly ()
 		exit $?
 	}
 
-	output | posit_post_cov | check
+	output | depur coverage | check
 }
 
 test_posit_process_with_single_test ()
