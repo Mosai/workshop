@@ -71,4 +71,4 @@ before_install:
 # see the env: section
 script:
   # Runs the script in the shell declared by env
-  - $TARGET_SHELL bin/posit spec test/
+  - $TARGET_SHELL bin/posit spec $TARGET_SHELL test/

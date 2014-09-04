@@ -1,4 +1,4 @@
-. "$(dirname $current_file)/../../lib/posit.sh"
+. "$POSIT_DIR/../../lib/posit.sh"
 
 test_posit_empty_call ()
 {
@@ -54,8 +54,8 @@ template_posit_runner ()
 	posit_process () ( cat; echo -n "process_called $@ " )
 
 	used_path="/path.sh"
-	called="$(posit $target_command $used_path)"
-	expected="list_called $used_path process_called $reporting_mode $used_path "
+	called="$(posit $target_command "$POSIT_CMD" $used_path)"
+	expected="list_called $used_path process_called $reporting_mode $POSIT_CMD $used_path "
 
 	[ "$called" = "$expected" ]
 }
@@ -84,20 +84,20 @@ test_posit_postcov_counts_lines_properly ()
 	output () 
 	{
 		cat <<-INPUT
-			$(dirname $current_file)/resources/posit_postcov.fixture.sh	4
-			$(dirname $current_file)/resources/posit_postcov.fixture.sh	9
-			$(dirname $current_file)/resources/posit_postcov.fixture.sh	9
-			$(dirname $current_file)/resources/posit_postcov2.fixture.sh	9
+			$POSIT_DIR/resources/posit_postcov.fixture.sh	4
+			$POSIT_DIR/resources/posit_postcov.fixture.sh	9
+			$POSIT_DIR/resources/posit_postcov.fixture.sh	9
+			$POSIT_DIR/resources/posit_postcov2.fixture.sh	9
 		INPUT
 	}
 
 	check ()
 	{
 		output="$(cat | cat)"
-		traced_lines="$(echo "$output" | grep "^-" | wc -l)"
-		zeroed_lines="$(echo "$output" | grep "^0" | wc -l)"
-		covered="$(echo "$output" | grep "^1" | wc -l)"
-		doubled="$(echo "$output" | grep "^2" | wc -l)"
+		traced_lines="$(echo "$output" | grep "^    -" | wc -l)"
+		zeroed_lines="$(echo "$output" | grep "^    0" | wc -l)"
+		covered="$(echo "$output" | grep "^    1" | wc -l)"
+		doubled="$(echo "$output" | grep "^    2" | wc -l)"
 
 		[ $traced_lines = 16 ] &&
 		[ $zeroed_lines = 1 ] &&
@@ -113,7 +113,9 @@ test_posit_postcov_counts_lines_properly ()
 test_posit_process_with_single_test ()
 {
 	posit_file_pattern=".fixture.sh"
-	file_mock_location="$(dirname $current_file)/resources/posit_postcov.fixture.sh test_should_always_pass"
+	file_mock_location="$(dirname
+
+	 $POSIT_FILE)/resources/posit_postcov.fixture.sh test_should_always_pass"
 	posit_exec_mock () ( echo "exec mock called" )
 	posit_file_report_mock () ( echo "file_report_mock called" )
 	posit_unit_report_mock () ( echo "unit_report_mock called" )
@@ -133,7 +135,9 @@ test_posit_process_with_single_test ()
 	}
 
 	echo $file_mock_location | 
-	posit_process "mock" "$(dirname $current_file)/resources/" |
+	posit_process "mock" "$POSIT_DIR/re
+
+	sources/" |
 	check
 }
 
@@ -148,10 +152,10 @@ test_posit_process_with_multiple_tests ()
 	mocklist ()
 	{
 		cat <<-LIST
-			$(dirname $current_file)/resources/posit_postcov.fixture.sh test_should_always_pass
-			$(dirname $current_file)/resources/posit_postcov.fixture.sh test_should_always_pass2
-			$(dirname $current_file)/resources/posit_postcov2.fixture.sh test_should_always_pass
-			$(dirname $current_file)/resources/posit_postcov2.fixture.sh test_should_always_pass2
+			$POSIT_DIR/resources/posit_postcov.fixture.sh test_should_always_pass
+			$POSIT_DIR/resources/posit_postcov.fixture.sh test_should_always_pass2
+			$POSIT_DIR/resources/posit_postcov2.fixture.sh test_should_always_pass
+			$POSIT_DIR/resources/posit_postcov2.fixture.sh test_should_always_pass2
 		LIST
 	}
 
@@ -170,7 +174,7 @@ test_posit_process_with_multiple_tests ()
 	}
 
 	mocklist | 
-		posit_process "mock" "$(dirname $current_file)/resources/" |
+		posit_process "mock" "$POSIT_DIR/resources/" |
 		check
 }
 
@@ -179,11 +183,11 @@ test_posit_process_with_no_tests ()
 	posit_exec_mock () ( echo "exec_mock called $@" )
 	posit_file_report_mock () ( echo "file_report_mock called $@" )
 	posit_unit_report_mock () ( echo "unit_report_mock called $@" )
-	mocklist () ( : )
+	mocklist () ( true )
 
-	result="$(mocklist | posit_process "mock" "$(dirname $current_file)/resources/")"
+	result="$(mocklist | posit_process "$POSIT_CMD" "mock" "$POSIT_DIR/resources/")"
 
-	[ "$result" = "No tests found on $(dirname $current_file)/resources/" ]
+	[ "$result" = "No tests found on $POSIT_DIR/resources/" ]
 }
 
 template_posit_unit_report ()
@@ -230,7 +234,7 @@ template_posit_exec ()
 	{
 		result="$(cat)"
 
-		[ "$result" = "collect called /foo/bar foo_bar $expected" ]
+		[ "$result" = "collect called /foo/bar foo_bar  $expected" ]
 		exit $?
 	}
 
@@ -254,7 +258,7 @@ test_posit_exec_cov ()
 
 test_posit_file_report_spec ()
 {
-	result="$(posit_file_report_spec "/foo/bar" | tail -n 1)"
+	result="$(posit_file_report_spec "/foo/bar" | sed '1d;$d')"
 
 	[ "$result" = "### /foo/bar" ]
 }

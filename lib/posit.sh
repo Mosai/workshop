@@ -1,5 +1,7 @@
 # File name pattern for test files
 posit_file_pattern="*.test.sh"	
+posit_exclude_file_pattern="\.test\.sh$"
+posit_trace_function=
 
 # Dispatches commands to other posit_ functions
 posit () ( posit_"$@" )
@@ -13,23 +15,23 @@ posit_help ()
 	cat <<-HELP
 		Usage: posit [command]
 
-		Commands: run   [path]        Run tests for the specified path
-		          spec  [path]        Run tests and display results as specs
-		          cov   [path]        Displays the code coverage for files used
-		          list  [path]        Lists test functions in the specified path
-		          exec  [file] [name] Run a single test by its file and name
-		          help                Displays this message
+		Commands: run   [cmd] [path]        Run tests for the specified path
+		          spec  [cmd] [path]        Run tests and display results as specs
+		          cov   [cmd] [path]        Displays the code coverage for files used
+		          list  [cmd] [path]        Lists test functions in the specified path
+		          help                      Displays this message
 	HELP
 }
 
 # Main function for the `posit run` report
 posit_run ()
 {
-	target="$1"
-	posit_list "$target" | posit_process run "$target"
+	target_cmd="$1"
+	target="$2"
+	posit_list "$target" | posit_process run "$target_cmd" "$target"
 }
 # Executes a single test
-posit_exec_run () ( posit_stack_collect "$1" "$2" "basename" )
+posit_exec_run () ( posit_stack_collect "$1" "$2" "$3" "basename" )
 # Reports a test file
 posit_file_report_run () ( : )
 # Reports a single unit
@@ -50,11 +52,12 @@ posit_unit_report_run ()
 # Main function for the `posit spec` report
 posit_spec ()
 {
-	target="$1"
-	posit_list "$target" | posit_process spec "$target"
+	target_cmd="$1"
+	target="$2"
+	posit_list "$target" | posit_process spec "$target_cmd" "$target"
 }
 # Executes a single test
-posit_exec_spec () ( posit_stack_collect "$1" "$2" "basename" )
+posit_exec_spec () ( posit_stack_collect "$1" "$2" "$3" "basename" )
 # Reports a test file
 posit_file_report_spec ()
 {
@@ -63,6 +66,7 @@ posit_file_report_spec ()
 	cat <<-FILEHEADER
 
 		### $current_file
+
 	FILEHEADER
 }
 # Reports a single unit
@@ -94,12 +98,13 @@ posit_unit_report_spec ()
 # Main function for the `posit cov` report
 posit_cov ()
 {
-	target="$1"
-	posit_list "$target" | posit_process cov "$target" |
+	target_cmd="$1"
+	target="$2"
+	posit_list "$target" | posit_process cov "$target_cmd" "$target" |
 	posit_post_cov
 }
 # Executes a single test
-posit_exec_cov () ( posit_stack_collect "$1" "$2" "echo" )
+posit_exec_cov () ( posit_stack_collect "$1" "$2" "$3" "echo" )
 # Reports a test file
 posit_file_report_cov () ( : )
 # Reports a single unit
@@ -125,7 +130,15 @@ posit_post_cov ()
 	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
 
 	for file in $covered_files; do
-		if [ -f $file ]; then
+
+		file="$(echo "$file" | sed "/$posit_exclude_file_pattern/d")"
+		if [ ! -z "$file" ] && [ -f $file ]; then
+
+			cat <<-FILEHEADER
+
+				### $file
+
+			FILEHEADER
 
 			# Gets lines only for this file
 			thisfile="$(echo "$unsorted" | grep "^$file")"
@@ -171,18 +184,19 @@ posit_post_cov_line ()
 	   [ -z "$(echo "$pureline" | sed '/^[	 ]*[a-zA-Z0-9_]*[	 ]*()$/d')" ] ||
 	# Ignore blank lines
 	   [ -z "$(echo "$pureline" | sed '/^[	 ]*$/d')" ]; then
-		echo "-	$(basename $file)	$pureline"
+		echo "    -	$pureline"
 		return
 	fi
 
-	echo "$matched	$(basename $file)	$pureline"
+	echo "    $matched	$pureline"
 }
 
 # Run tests from a STDIN list
 posit_process ()
 {
 	report_mode="$1"
-	target="$2"
+	target_cmd="$2"
+	target="$3"
 	passed_count=0
 	total_count=0
 	last_file=""
@@ -200,7 +214,7 @@ posit_process ()
 		total_count=$((total_count+1))
 
 		# Runs a test and stores results
-		results="$(posit_exec_$report_mode $test_parameters)"
+		results="$(posit_exec_$report_mode "$target_cmd" $test_parameters)"
 		returned=$?
 
 		# Run the customized report
@@ -235,65 +249,74 @@ posit_stack_format ()
 	results="$2"
 
 	if [ $returned != 0 ]; then
+		echo ""
 		echo "$results"   |
-			  # Removes the first and last lines
-		      sed '1d;$d' | 
+			  # Removes the first line
+		      sed '1d' | 
 		      # Displays the stack in aligned columns
-		      awk 'BEGIN{FS=OFS="\t"}{ printf "   %-4s %-20s %-30s\n", $1, $2, $3}'
+		      awk 'BEGIN{FS=OFS="\t"}{ printf "        %-4s %-20s %-30s\n", $1, $2, $3}'
+		echo ""
 	fi
 }
 
 # Executes a test passing a filter to the stack
 posit_stack_collect ()
 {
-	test_file="$1"
-	test_function="$2"
-	file_filter="$3"
+	target_cmd="$1"
+	test_file="$2"
+	test_function="$3"
+	file_filter="$4"
 
-	posit_external "$test_file" "$test_function" "$file_filter" 2>&1
+	external_output="$(posit_external "$target_cmd" "$test_file" "$test_function" "$file_filter" 2>&1)"
+	external_code=$?
+	if [ $external_code != 0 ];then
+		echo "$external_output"
+	fi
 	
-	return $?
+	return $external_code
+}
+
+posit_get_tracer ()
+{
+	interpreter="$1"
+	filter="${2:-basename}"
+
+	$interpreter <<-EXTERNAL 
+		if [ z"\$BASH_VERSION" != z ]; then
+			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
+		elif [ z"\$(echo "\$KSH_VERSION" | sed -n '/93/p')" != z ]; then
+			echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
+		elif [ z"\$ZSH_VERSION" != z ]; then
+			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
+		else
+			echo "+	:\\\${LINENO:-0}	" # Fallback
+		fi
+	EXTERNAL
 }
 
 # Executes a file on a function using an external shell process
 posit_external ()
 {
-	test_file="$1"
-	test_function="$2"
-	file_filter="$3"
-
-	posit_find_current_shell
-
-	# Find out command to get file/line information on PS4 for
-	# each shell
-	if [ z"$BASH_VERSION" != z ]; then
-		trace_command="+	\$($file_filter \"\${BASH_SOURCE}\"):\${LINENO}	"
-	elif [ "$posit_current_shell" = "pdksh" ]; then
-		trace_command="+	[unknown]:\${LINENO}	"
-	elif [ "$posit_current_shell" = "mksh" ]; then
-		trace_command="+	[unknown]:\${LINENO}	"
-	elif [ z"$KSH_VERSION" != z ]; then
-		trace_command="+	\$($file_filter \"\${.sh.file}\"):\${LINENO}	"
-	elif [ z"$ZSH_VERSION" != z ]; then
-		trace_command="+	\$($file_filter \${(%):-%x:%I})	"
-	else
-		trace_command="+	[unknown]:\${LINENO}	" # Fallback
+	interpreter="$1"
+	test_file="$2"
+	test_dir="$(dirname "$2")"
+	test_function="$3"
+	filter="$4"
+	if [ -z "$posit_trace_function"]; then
+		export posit_trace_function="$(posit_get_tracer "$interpreter" "$filter")"
 	fi
 
-	# Executes the shell in a separate process
-	$posit_current_shell <<-EXTERNAL
-		# Enables compatibility options when needed
+	PS4="$posit_trace_function"     \
+	POSIT_CMD="$interpreter"        \
+	POSIT_FILE="$test_file"         \
+	POSIT_DIR="$test_dir"           \
+	POSIT_FUNCTION="$test_function" \
+	$interpreter +e <<-EXTERNAL
 		command -v setopt 2>/dev/null >/dev/null && setopt PROMPT_SUBST SH_WORD_SPLIT
-
-		current_file="$test_file" # Stores the current file
-		PS4='$trace_command'      # Injects the debug prompt
-		set -x                    # Enables debugging
-		. "$test_file"            # Loads the file
-		$test_function            # Executes the function
-		has_passed=\$?            # Stores the returned code
-		set +x                    # Disables debugging
-		exit \$has_passed         # Exits with the test results
-
+		set -x
+		. "\$POSIT_FILE" &&
+		   \$POSIT_FUNCTION
+	   exit \$?
 	EXTERNAL
 }
 
@@ -331,28 +354,4 @@ posit_listfile ()
 		while read line; do
 			echo "$target_file $line"
 		done
-}
-
-posit_find_current_shell () 
-{
-	if [ -z "$posit_current_shell" ]; then
-		# File name pattern for test files
-		posit_file_pattern="*.test.sh"
-		# Saves the current shell command for future use
-		posit_current_shell=$(ps -o pid,comm 2>/dev/null | grep $$ | head -n1 | sed 's/.* //g')
-		# Some shells are reported with a dash 
-		posit_current_shell="${posit_current_shell#-}"
-
-		# Falls back to $SHELL when no valid command found
-		if [ -z "$(command -v "$posit_current_shell")" ]; then
-			posit_current_shell="$SHELL"
-		fi
-
-		# Fixes incomplete ps output for the busybox sh
-		if [ "$posit_current_shell" = "busybox" ]; then
-			posit_current_shell="busybox sh"
-		fi
-
-		export posit_current_shell="$posit_current_shell"
-	fi
 }

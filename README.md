@@ -12,24 +12,23 @@ more features and tools are planned.*
 
 [![Build Status](https://travis-ci.org/Mosai/workshop.svg?branch=master)](https://travis-ci.org/Mosai/workshop)
 
-Installation
+Instructions
 ------------
 
-Linux and OS X:
+  1. `$ git clone git@github.com:Mosai/workshop.git` or [download and unzip](https://github.com/Mosai/workshop/archive/master.zip) the project.
+  2. `$ cd /path/to/project/workshop` (use your real path)
+  3. `$ bin/posit help`
 
-  1. Clone or [download](https://github.com/Mosai/workshop/archive/master.zip) the project.
-
-Windows:
-
-  1. [Download git](http://git-scm.com/download/win) to get the git bash.
-  2. Clone or [download](https://github.com/Mosai/workshop/archive/master.zip) the project.
+If you're on Windows, [download git](http://git-scm.com/download/win) before anything else. 
+Git already includes the Git Bash.
 
 The Tools
 ---------
 
 ### posit
 
-posit can run tests written as shell functions. A test look likes this:
+posit can run tests written as shell functions. A test should be named "*.test.sh" and
+look likes this:
 
 ```sh
 test_tr_can_replace_fancy_chars ()
@@ -40,8 +39,34 @@ test_tr_can_replace_fancy_chars ()
 }
 ```
 
+Tests on posit are isolated, so you can mock other commands and functions:
+
+```sh
+
+test_posit_list_using_files ()
+{
+  # Mocks the posit_listfile function that should be called
+  posit_listfile () ( echo "$1 OK" )
+
+  # Run the test
+  expected_list="$(posit list /usr/bin/env)"
+  
+  # Checks if the mock command was called
+  [ "$expected_list" = "/usr/bin/env OK" ]
+}
+```
+
 Each one of these functions runs in its own process to prevent contamination. A test
 passes when its function returns a successful code.
+
+The following variables are available for each test:
+
+
+  - `$POSIT_FILE` has the relative path to the current test.
+  - `$POSIT_DIR` has the relative directory to the current test.
+  - `$POSIT_FUNCTION` has the function name for the test
+  - `$POSIT_CMD` has the command line to invoke the current shell
+
 
 #### Test Runner
 
@@ -49,7 +74,7 @@ You can run tests using the `$ bin/posit` tool from this package. This is
 how the runner output is presented:
 
 ```
-$ bin/posit run test/
+$ bin/posit run ksh test/
 ### test/posit/unit.test.sh
   - pass: posit empty call
   - pass: posit help
@@ -102,7 +127,7 @@ line numbers.
 Experimental code coverage reports are available for shells
 that support the rich stack traces. 
 
-This is an excerpt from the `$ bin/posit cov test/` output:
+This is an excerpt from the `$ bin/posit cov ksh test/` output:
 
 ```
 -	posit_run ()
