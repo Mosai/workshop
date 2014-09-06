@@ -150,7 +150,7 @@ line numbers.
 Experimental code coverage reports are available for shells
 that support the rich stack traces. 
 
-This is an excerpt from the `$ bash bin/posit --spec=cov --shell=bash test/dispatch` output:
+This is an excerpt from the `$ bash bin/posit --spec=cov --shell=bash run test/dispatch` output:
 
 ```
 > `-    # Detects if a command, --long or -short option was called`  
@@ -166,6 +166,11 @@ This is an excerpt from the `$ bash bin/posit --spec=cov --shell=bash test/dispa
 ``` 
 
 The number on the left is the number of passes that each specific line had. 
+Coverage information is subject to shell support:
+
+  - **bash** presents the most accurate count.
+  - **zsh** and **ksh** may miss some lines.
+  - others have only support for stack traces without files/lines.
 
 Testing
 -------
