@@ -1,55 +1,180 @@
-depur_trace_function=
-depur_exclude_file_pattern="\.test\.sh$"
-
 # Dispatches commands to other depur_ functions
-depur () ( depur_"$@" )
+depur () ( dispatch depur "$@" )
 
-# Placeholder for empty calls
-depur_ () ( echo "No command provided. Try 'depur help'" 1>&2 )
+# Global option defaults
+depur_trace_command=""  # Command to extract file/line info on stacks
+depur_filter="basename" # Filter used on file names when showing a stack trace
+depur_shell="sh"        # Shell used as interpreter
 
 # Provides help
-depur_help ()
+depur_command_help ()
 {
 	cat <<-HELP
-		Usage: depur [command] [args...]
+	   Usage: depur [option_list...] [command]
+	          depur help, -h, --help [command]  Displays help for command.
+
+	Commands: run    [command] Runs and traces the given command.
+	          tracer           Gets a tracer command for a shell.
+	          format           Formats a stack trace from stdin.
+	          coverage         Formats a trace from stdin into
+	                           code coverage results.
+
+	 Options: --shell [shell]  Changes the shell used for debugging.
+	          --short, -s      Displays only the basename for paths.
+	          --full,  -f      Displays complete paths for the trace.
 	HELP
 }
 
-depur_run ()
-{
-	interpreter="$1"
-	shift
-	cmdline="$@"
+# Options
+depur_option_f     () ( export depur_filter="echo";     dispatch depur "$@" )
+depur_option_full  () ( export depur_filter="echo";     dispatch depur "$@" )
+depur_option_s     () ( export depur_filter="basename"; dispatch depur "$@" )
+depur_option_short () ( export depur_filter="basename"; dispatch depur "$@" )
+depur_option_shell () ( export depur_shell="$1"; shift; dispatch depur "$@" )
 
-	PS4="$(depur_tracer "$interpreter" basename)" $interpreter -x $cmdline 2>&1
+depur_      () ( echo "No command provided. Try 'depur --help'"; return 1 )
+depur_call_ () ( echo "Call '$1' invalid. Try 'depur --help'"; return 1)
+
+# Runs a command and displays its stack trace
+depur_command_run ()
+{
+	# Sets a tracer and run the command on a shell with -x
+	PS4="$(depur_command_tracer "$depur_shell")" $depur_shell -x $@ 2>&1
 }
 
-depur_full ()
+# Sets and returns the tracer command to be used on PS4 prompts
+depur_command_tracer ()
 {
-	interpreter="$1"
-	shift
-	cmdline="$@"
-
-	PS4="$(depur_tracer "$interpreter" echo)" $interpreter -x $cmdline 2>&1
-}
-
-depur_cov ()
-{
-	depur_full "$@" | depur_coverage
-}
-
-depur_tracer ()
-{
-	interpreter="$1"
-	filter="$2"
-
-	if [ -z "$depur_trace_function"]; then
-		export depur_trace_function="$(depur_get_tracer "$interpreter" "$filter")"
+	if [ -z "$depur_trace_command" ]; then
+		export depur_trace_command="$(depur_get_tracer "$1")"
 	fi
 
-	echo "$depur_trace_function"
+	echo "$depur_trace_command"
 }
 
+# Parses a stack from the stdin and outputs its code coverage report
+depur_command_coverage ()
+{
+	# Should contain a list of files and lines covered
+	unsorted="$(depur_clean)"
+	# Gets an unique list of files
+	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
+
+	# Loop all files listed in the stack
+	for file in $covered_files; do
+		file="$(echo "$file")"
+		if [ ! -z "$file" ] && [ -f $file ]; then
+			cat $file | depur_covfile "$file" "$unsorted"
+			echo ""
+		fi
+	done
+}
+
+# Formats a stack into columns
+depur_command_format ()
+{
+	echo ""
+	# Removes the first line
+	sed '1d' | 
+	# Displays the stack in aligned columns
+	awk 'BEGIN {FS=OFS="\t"}
+	           { printf "        %-4s %-20s %-30s\n", $1, $2, $3}'
+	echo ""
+}
+
+# Processes the code coverage for one file
+depur_covfile ()
+{
+	file="$1"
+	unsorted="$2"
+	total_lines=0
+	covered_lines=0
+	traced_lines=0
+
+	cat <<-FILEHEADER
+
+		### $file
+
+	FILEHEADER
+
+	# Gets lines that were covered only for this file
+	thisfile="$(echo "$unsorted" | grep "^$file")"
+
+	while IFS='' read -r file_line; do
+		total_lines=$((total_lines+1))
+		# Full line text
+		line="$(printf "%s\n" "$file_line" | tr '`' ' ')"
+		# Number of matches on this line
+		matched="$(echo "$thisfile"         |
+			sed -n "/	$total_lines$/p" | 
+			wc -l                       | 
+			sed "s/[	 ]*//")"
+
+		if [ $matched -gt 0 ]; then
+			covered_lines="$((covered_lines+1))"
+		fi
+		# Formatted number of matched lines <tab> the file line
+		covline="$(depur_covline "$total_lines" "$line" "$matched")"
+		traced="$(echo "$covline" | 
+			grep "^  \`-"     |
+			wc -l             | 
+			sed "s/[	 ]*//")"
+		if [ $traced -gt 0 ]; then
+			traced_lines=$((traced_lines+1))
+		fi
+		echo "$covline"
+	done
+
+	valid_lines=$(( total_lines - traced_lines ))
+
+	if [ $valid_lines -gt 0 ]; then
+		per=$((100*covered_lines/valid_lines))
+	else
+		per=0
+	fi
+
+	filename="$(basename "$file")"
+	totals="$covered_lines/$valid_lines"
+
+	echo ""
+	echo "Total: $filename has $totals lines covered (${per}%)."
+	IFS= # Restore separator
+}
+
+
+# Cleans up a coverage line before displaying it
+depur_covline ()
+{
+	lineno="$1"          # Current line number on file
+	line="$2"            # Full line text
+	matched="$3"         # How many cover matches
+	ws="[	 ]*"         # Pattern to look for whitespace
+	alnum="[a-zA-Z0-9_]" # Pattern to look for alnum
+
+	# Ignore comment lines
+	if [ -z "$(echo "$line" | sed "/^${ws}#/d")" ]                 ||
+	# Ignore lines with only a '{'
+	   [ -z "$(echo "$line" | sed "/^${ws}{${ws}$/d")" ]           ||
+	# Ignore lines with only a '}'
+	   [ -z "$(echo "$line" | sed "/^${ws}}${ws}$/d")" ]           ||
+	# Ignore lines with only a 'fi'
+	   [ -z "$(echo "$line" | sed "/^${ws}fi${ws}$/d")" ]          ||
+	# Ignore lines with only a 'done'
+	   [ -z "$(echo "$line" | sed "/^${ws}done${ws}$/d")" ]        ||
+	# Ignore lines with only a 'else'
+	   [ -z "$(echo "$line" | sed "/^${ws}else${ws}$/d")" ]        ||
+	# Ignore lines with only a function declaration
+	   [ -z "$(echo "$line" | sed "/^${ws}${alnum}*${ws}()${ws}$/d")" ] ||
+	# Ignore blank lines
+	   [ -z "$(echo "$line" | sed "/^${ws}$/d")" ]; then
+		echo "> \`-	$line\`  "
+		return
+	fi
+
+	echo "> \`$matched	${line}\`"
+}
+
+# Cleans up a stack
 depur_clean ()
 {
 	# Remove non-stack lines (stack lines start with +) 
@@ -61,102 +186,21 @@ depur_clean ()
 	sed '/^:/d;   /^[	 ]*$/d;   s/:/	/' 
 }
 
-depur_coverage ()
-{
-	# Should contain a list of files and lines covered
-	unsorted="$(depur_clean)"
-	# Gets an unique list of files
-	covered_files="$(echo "$unsorted" | cut -d"	" -f1 | sort | uniq)"
-
-	for file in $covered_files; do
-
-		file="$(echo "$file" | sed "/$depur_exclude_file_pattern/d")"
-		if [ ! -z "$file" ] && [ -f $file ]; then
-
-			cat <<-FILEHEADER
-
-				### $file
-
-			FILEHEADER
-
-			# Gets lines only for this file
-			thisfile="$(echo "$unsorted" | grep "^$file")"
-
-			IFS='' 					# Read line by line, not separator
-			sed '/./=' $file     |  # Number lines on file
-			sed '/./N; s/\n/ /'  |  # Format numbered lines
-			while read file_line; do
-				# Current line number
-				lineno="$(echo "$file_line" | cut -d" " -f1)"
-				# Full line text
-				pureline="$(echo "$file_line" | cut -d" " -f2-)"
-				# Number of matches on this line
-				matched="$(echo "$thisfile" | sed -n "/	$lineno$/p" | wc -l | sed "s/[	 ]*//")"
-				# Formatted number of matched lines <tab> the file line
-				depur_covline "$lineno" "$pureline" "$matched" "$file"
-			done
-			IFS= # Restore separator
-		fi
-	done
-}
-
-
-depur_covline ()
-{
-	lineno="$1"
-	pureline="$2"
-	matched=$3
-	file="$4"
-
-	# Ignore comment lines
-	if [ -z "$(echo "$pureline" | sed '/^[	 ]*#/d')" ]        ||
-	# Ignore lines with only a '{'
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*{[	 ]*$/d')" ]    ||
-	# Ignore lines with only a '}'
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*}[	 ]*$/d')" ]    ||
-	# Ignore lines with only a 'fi'
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*fi[	 ]*$/d')" ]   ||
-	# Ignore lines with only a 'done'
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*done[	 ]*$/d')" ] ||
-	# Ignore lines with only a 'else'
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*else[	 ]*$/d')" ] ||
-	# Ignore lines with only a function declaration
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*[a-zA-Z0-9_]*[	 ]*()$/d')" ] ||
-	# Ignore blank lines
-	   [ -z "$(echo "$pureline" | sed '/^[	 ]*$/d')" ]; then
-		echo "    -	$pureline"
-		return
-	fi
-
-	echo "    $matched	$pureline"
-}
-
-
+# Returns the command tracer without caching it
 depur_get_tracer ()
 {
-	interpreter="$1"
-	filter="${2:-basename}"
+	shell="$1"
+	filter="${depur_filter}"
 
-	$interpreter <<-EXTERNAL 
-		if [ z"\$BASH_VERSION" != z ]; then
-			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
-		elif [ z"\$(echo "\$KSH_VERSION" | sed -n '/93/p')" != z ]; then
-			echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
-		elif [ z"\$ZSH_VERSION" != z ]; then
-			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
-		else
-			echo "+	:\\\${LINENO:-0}	" # Fallback
-		fi
+	$shell <<-EXTERNAL 2>/dev/null
+	if [ z"\$BASH_VERSION" != z ]; then
+		echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
+	elif [ z"\$(echo "\$KSH_VERSION" | sed -n '/93/p')" != z ]; then
+		echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
+	elif [ z"\$ZSH_VERSION" != z ]; then
+		echo "+	\\\$($filter \\\${(%):-%x:%I})	"
+	else
+		echo "+	:\\\${LINENO:-0}	" # Fallback
+	fi
 	EXTERNAL
 }
-
-depur_format ()
-{
-	echo ""
-	# Removes the first line
-	sed '1d' | 
-	# Displays the stack in aligned columns
-	awk 'BEGIN{FS=OFS="\t"}{ printf "        %-4s %-20s %-30s\n", $1, $2, $3}'
-	echo ""
-}
-

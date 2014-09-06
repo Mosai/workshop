@@ -1,30 +1,12 @@
-. "$POSIT_DIR/../../lib/posit.sh"
+. "$POSIT_DIR/../../lib/dispatch.sh"
 . "$POSIT_DIR/../../lib/depur.sh"
-
-test_posit_empty_call ()
-{
-	# Stubs an illustrative posit_* function
-	posit_demo () ( echo "OK $@" )
-
-	dispatched="$(posit demo 1 2 3)"
-
-	[ "$dispatched" = "OK 1 2 3" ]
-}
-
-test_posit_help ()
-{
-	help_call="$(posit help | cat)"
-	returned_code=$?
-
-	[ ! -z "$help_call" ] &&
-	[ $returned_code = 0 ]
-}
+. "$POSIT_DIR/../../lib/posit.sh"
 
 test_posit_list_using_files ()
 {
 	posit_listfile () ( echo "$1 OK" )
 
-	expected_list="$(posit list /usr/bin/env)"
+	expected_list="$(posit_command_list /usr/bin/env)"
 	
 	[ "$expected_list" = "/usr/bin/env OK" ]
 }
@@ -33,7 +15,7 @@ test_posit_list_using_directories ()
 {
 	posit_listdir () ( echo "$1 OK" )
 
-	expected_list="$(posit list /usr)"
+	expected_list="$(posit_command_list /usr)"
 	
 	[ "$expected_list" = "/usr OK" ]
 }
@@ -43,44 +25,45 @@ test_posit_list_without_parameters ()
 	posit_listfile () ( echo "should not be called" )
 	posit_listdir  () ( echo "should not be called" )
 
-	expected_list="$(posit list)"
+	expected_list="$(posit_command_list)"
+
+	[ "$expected_list" = "" ]
 }
 
 template_posit_runner ()
 {
 	reporting_mode="$1"
-	target_command="$2"
 
-	posit_list    () ( echo -n "list_called $@ " )
+	posit_command_list () ( echo -n "list_called $@ " )
 	posit_process () ( cat; echo -n "process_called $@ " )
 
 	used_path="/path.sh"
-	called="$(posit $target_command "$POSIT_CMD" $used_path)"
-	expected="list_called $used_path process_called $reporting_mode $POSIT_CMD $used_path "
+	called="$(posit --report $reporting_mode run "$used_path")"
+	expected="list_called $used_path process_called $used_path "
 
 	[ "$called" = "$expected" ]
 }
 
-test_posit_run ()
+test_posit_tiny ()
 {
-	template_posit_runner "run" "run"
+	template_posit_runner "tiny"
 }
 
 test_posit_spec ()
 {
-	template_posit_runner "spec" "spec"
+	template_posit_runner "spec"
 }
 
 test_posit_cov ()
 {
-	depur_coverage () ( cat )
+	depur_command_coverage () ( cat )
 
-	template_posit_runner "cov" "cov"
+	template_posit_runner "cov"
 }
 
 test_depur_coverage_counts_lines_properly ()
 {
-	posit_file_pattern=".fixture.sh"
+	posit_files=".fixture.sh"
 	
 	output () 
 	{
@@ -97,12 +80,12 @@ test_depur_coverage_counts_lines_properly ()
 	check ()
 	{
 		output="$(cat | cat)"
-		traced_lines="$(echo "$output" | grep "^    -" | wc -l)"
-		zeroed_lines="$(echo "$output" | grep "^    0" | wc -l)"
-		covered="$(echo "$output" | grep "^    1" | wc -l)"
-		doubled="$(echo "$output" | grep "^    2" | wc -l)"
+		skipped_lines="$(echo "$output" | grep "\`-	" | wc -l)"
+		zeroed_lines="$(echo "$output" | grep "\`0	" | wc -l)"
+		covered="$(echo "$output" | grep "\`1	" | wc -l)"
+		doubled="$(echo "$output" | grep "\`2	" | wc -l)"
 
-		[ $traced_lines = 16 ] &&
+		[ $skipped_lines = 16 ] &&
 		[ $zeroed_lines = 1 ] &&
 		[ $covered = 2 ] &&
 		[ $doubled = 1 ]
@@ -110,35 +93,36 @@ test_depur_coverage_counts_lines_properly ()
 		exit $?
 	}
 
-	output | depur coverage | check
+	output | depur_command_coverage | check
 }
 
 test_posit_process_with_single_test ()
 {
 	posit_file_pattern=".fixture.sh"
-	file_mock_location="$(dirname
-
-	 $POSIT_FILE)/resources/posit_postcov.fixture.sh test_should_always_pass"
+	file_mock_location="$POSIT_DIR/resources/posit_postcov.fixture.sh test_should_always_pass"
+	posit_count_mock () ( echo "$1...$2" )
 	posit_exec_mock () ( echo "exec mock called" )
-	posit_file_report_mock () ( echo "file_report_mock called" )
-	posit_unit_report_mock () ( echo "unit_report_mock called" )
+	posit_head_mock () ( echo "head_mock called" )
+	posit_unit_mock () ( echo "unit_mock called" )
+	posit_all_mock () ( cat )
 
 	check () 
 	{
 		result="$(cat)"
-		file_report_results="$(echo "$result" | grep "^file_report_mock called")"
-		unit_report_results="$(echo "$result" | grep "^unit_report_mock called")"
+		head_results="$(echo "$result" | grep "^head_mock called")"
+		unit_results="$(echo "$result" | grep "^unit_mock called")"
 		last_line="$(echo "$result" | tail -n 1)"
 
-		[ "$file_report_results" = "file_report_mock called" ] &&
-		[ "$unit_report_results" = "unit_report_mock called" ] &&
-		[ "$last_line" = "1 tests out of 1 passed." ]
+		[ "$head_results" = "head_mock called" ] &&
+		[ "$unit_results" = "unit_mock called" ] &&
+		[ "$last_line" = "1...1" ]
 
 		exit $?
 	}
 
+	posit_mode="mock"
 	echo $file_mock_location | 
-	posit_process "mock" "$POSIT_DIR/re
+	posit_process "$POSIT_DIR/re
 
 	sources/" |
 	check
@@ -149,8 +133,10 @@ test_posit_process_with_multiple_tests ()
 {
 	posit_file_pattern=".fixture.sh"
 	posit_exec_mock () ( echo "exec mock called" )
-	posit_file_report_mock () ( echo "file_report_mock called" )
-	posit_unit_report_mock () ( echo "unit_report_mock called" )
+	posit_head_mock () ( echo "head_mock called" )
+	posit_unit_mock () ( echo "unit_mock called" )
+	posit_count_mock () ( echo "$1...$2" )
+	posit_all_mock () ( cat )
 
 	mocklist ()
 	{
@@ -165,79 +151,83 @@ test_posit_process_with_multiple_tests ()
 	check () 
 	{
 		result="$(cat)"
-		file_report_results="$(echo "$result" | grep "^file_report_mock called" | wc -l)"
-		unit_report_results="$(echo "$result" | grep "^unit_report_mock called" | wc -l)"
+		head_results="$(echo "$result" | grep "^head_mock called" | wc -l)"
+		unit_results="$(echo "$result" | grep "^unit_mock called" | wc -l)"
 		last_line="$(echo "$result" | tail -n 1)"
 
-		[ $file_report_results = 2 ] &&
-		[ $unit_report_results = 4 ] &&
-		[ "$last_line" = "4 tests out of 4 passed." ]
+		[ $head_results = 2 ] &&
+		[ $unit_results = 4 ] &&
+		[ "$last_line" = "4...4" ]
 
 		exit $?
 	}
 
+	posit_mode="mock"
 	mocklist | 
-		posit_process "mock" "$POSIT_DIR/resources/" |
+		posit_process "$POSIT_DIR/resources/" |
 		check
 }
 
 test_posit_process_with_no_tests ()
 {
-	posit_exec_mock () ( echo "exec_mock called $@" )
-	posit_file_report_mock () ( echo "file_report_mock called $@" )
-	posit_unit_report_mock () ( echo "unit_report_mock called $@" )
+	posit_exec_mock ()  ( echo "exec_mock called $@" )
+	posit_head_mock ()  ( echo "head_mock called $@" )
+	posit_unit_mock ()  ( echo "unit_mock called $@" )
+	posit_count_mock () ( echo "$@" )
 	mocklist () ( true )
 
-	result="$(mocklist | posit_process "$POSIT_CMD" "mock" "$POSIT_DIR/resources/")"
+	posit_mode="mock"
+	result="$(mocklist | posit_process "$POSIT_DIR/resources/")"
 
-	[ "$result" = "No tests found on $POSIT_DIR/resources/" ]
+	[ "$result" = "0 0 0" ]
 }
 
-template_posit_unit_report ()
+template_posit_unit ()
 {
 	expected_mode="$1"
 	expected_code="$2"
 	expected_string="$3"	
 
-	result="$(posit_unit_report_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
+	result="$(posit_unit_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
 	pass_results="$(echo "$result" | grep "$expected_string" | wc -l)"
 
 	[ $pass_results = 1 ]
 }
 
-test_posit_unit_report_spec_success ()
+test_posit_unit_spec_success ()
 {
 	posit_stack_format () ( : )
-	template_posit_unit_report spec 0 "pass:"
+	template_posit_unit spec 0 "pass:"
 }
 
-test_posit_unit_report_spec_fail ()
+test_posit_unit_spec_fail ()
 {
 	posit_stack_format () ( : )
-	template_posit_unit_report spec 1 "fail:"
+	template_posit_unit spec 1 "fail:"
 }
 
-test_posit_unit_report_run_fail ()
+test_posit_unit_tiny_fail ()
 {
-	template_posit_unit_report run 1 "F"
+	template_posit_unit tiny 1 "F"
 }
 
-test_posit_unit_report_run_success ()
+test_posit_unit_tiny_success ()
 {
-	template_posit_unit_report run 0 "\."
+	template_posit_unit tiny 0 "\."
 }
 
 template_posit_exec ()
 {
 	mode="$1"
 	expected="$2"
-	posit_stack_collect () ( echo "collect called $@" )
+	args="$3"
+	posit_external () ( echo "external called $@" )
 
 	check ()
 	{
-		result="$(cat)"
+		result="$(cat | tail -n 1)"
 
-		[ "$result" = "collect called /foo/bar foo_bar  $expected" ]
+		[ "$result" = "external called /foo/bar foo_bar $expected" ]
 		exit $?
 	}
 
@@ -246,27 +236,27 @@ template_posit_exec ()
 
 test_posit_exec_spec ()
 {
-	template_posit_exec spec "basename"
+	template_posit_exec spec "--short"
 }
 
-test_posit_exec_run ()
+test_posit_exec_tiny ()
 {
-	template_posit_exec run "basename"
+	template_posit_exec tiny "--short"
 }
 
 test_posit_exec_cov ()
 {
-	template_posit_exec cov "echo"
+	template_posit_exec cov "--full"
 }
 
-test_posit_file_report_spec ()
+test_posit_head_spec ()
 {
-	result="$(posit_file_report_spec "/foo/bar" | sed '1d;$d')"
+	result="$(posit_head_spec "/foo/bar" | sed '1d;$d')"
 
 	[ "$result" = "### /foo/bar" ]
 }
 
-test_posit_unit_report_cov ()
+test_posit_unit_cov ()
 {
 	unit_results_mock ()
 	{
@@ -284,7 +274,7 @@ test_posit_unit_report_cov ()
 	}
 	unit_results=$(unit_results_mock | cat)
 
-	result="$(posit_unit_report_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
+	result="$(posit_unit_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
 	line_count="$(echo "$result" |  grep somefile.sh | wc -l )"
 
 	[ $line_count = 3 ]

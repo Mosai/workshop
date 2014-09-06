@@ -4,6 +4,8 @@
 # If this script is in /foo/bin, points to /foo/lib
 depur_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
+dispatch () ( . "$depur_path/dispatch.sh" && dispatch "$@" )
+
 . "$depur_path/depur.sh" || exit 1
 
 # Enables word split on zsh

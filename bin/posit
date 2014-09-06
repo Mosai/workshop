@@ -4,9 +4,10 @@
 # If this script is in /foo/bin, points to /foo/lib
 posit_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
-. "$posit_path/posit.sh" || exit 1
+dispatch () ( . "$posit_path/dispatch.sh" && dispatch "$@" )
+depur    () ( . "$posit_path/depur.sh"    && depur "$@" )
 
-depur () ( . "$posit_path/depur.sh" && depur "$@" )
+. "$posit_path/posit.sh" || exit 1
 
 # Enables word split on zsh
 command -v setopt 2>/dev/null >/dev/null && setopt SH_WORD_SPLIT
