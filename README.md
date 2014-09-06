@@ -201,5 +201,11 @@ Distros tested:
   - **FreeBSD 10.0** from the Vagrantfile.
   - **Current ArchLinux** from the Vagrantfile.
 
-The list of shells tested is available in the provisioning
-inliners inside the Vagrantfile.
+Shells tested:
+
+  - **bash**, default from each distro and bash2.05b, bash3.0.16
+    bash3.2.48 and bash4.2.45 from PPA, current from brew on Travis.
+  - **zsh** and **zsh-beta** when available (Debian-based distros mostly.)
+  - **ksh** and **pdksh**, **mksh** when available.
+  - **dash** when available.
+  - **busybox sh** when available.
