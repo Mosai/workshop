@@ -7,7 +7,7 @@ posit_mode="tiny"        # Reporting mode to be used
 posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
 posit_silent="-1"        # Displays full stacks. Use -1 to turn off
-posit_timeout="3s"
+posit_timeout="3s"       # Timeout for each test
 
 # Displays help
 posit_command_help ()
@@ -47,7 +47,7 @@ posit_option_s       () ( posit_silent="1";            dispatch posit "$@" )
 posit_option_silent  () ( posit_silent="1";            dispatch posit "$@" )
 
 posit_     () ( echo "No command provided. Try 'posit --help'";return 1 )
-poit_call_ () ( echo "Call '$1' invalid. Try 'poit --help'"; return 1)
+posit_call_ () ( echo "Call '$@' invalid. Try 'posit --help'"; return 1)
 
 # Lists tests in the specified target path
 posit_command_list ()

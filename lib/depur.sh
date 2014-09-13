@@ -33,7 +33,7 @@ depur_option_short () ( export depur_filter="basename"; dispatch depur "$@" )
 depur_option_shell () ( export depur_shell="$1"; shift; dispatch depur "$@" )
 
 depur_      () ( echo "No command provided. Try 'depur --help'"; return 1 )
-depur_call_ () ( echo "Call '$1' invalid. Try 'depur --help'"; return 1)
+depur_call_ () ( echo "Call '$@' invalid. Try 'depur --help'"; return 1)
 
 # Runs a command and displays its stack trace
 depur_command_run ()
@@ -116,7 +116,7 @@ depur_covfile ()
 		# Formatted number of matched lines <tab> the file line
 		covline="$(depur_covline "$total_lines" "$line" "$matched")"
 		traced="$(echo "$covline" | 
-			grep "^  \`-"     |
+			grep "^> \`-\`"     |
 			wc -l             | 
 			sed "s/[	 ]*//")"
 		if [ $traced -gt 0 ]; then
@@ -167,11 +167,16 @@ depur_covline ()
 	   [ -z "$(echo "$line" | sed "/^${ws}${alnum}*${ws}()${ws}$/d")" ] ||
 	# Ignore blank lines
 	   [ -z "$(echo "$line" | sed "/^${ws}$/d")" ]; then
-		echo "> \`-	$line\`  "
+	   	if [ -z "$line" ]; then
+			echo "> \`-\`  "
+   		else
+			echo "> \`-\`	\`$line\`  "
+		fi
 		return
 	fi
 
-	echo "> \`$matched	${line}\`"
+	echo "> \`$matched\`	\`${line}\`"
+
 }
 
 # Cleans up a stack
