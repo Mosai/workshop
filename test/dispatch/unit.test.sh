@@ -1,4 +1,7 @@
-. "$POSIT_DIR/../../lib/dispatch.sh"
+setup ()
+{
+	. "$POSIT_DIR/../../lib/dispatch.sh"
+}
 
 test_dispatch_with_empty_placeholder ()
 {
@@ -96,20 +99,3 @@ test_dispatch_option_long_repassing ()
 	[ "Option ${expected_string} fooCommand ${expected_string} " = "$short_repassing_call" ]
 }
 
-test_dispatch_option_long_value_and_repassing ()
-{
-	expected_string="Called!"
-	
-	example             () ( dispatch example "$@" )
-	example_command_foo () ( echo -n "Command $expected_string $@" )
-	example_option_fanz () 
-	{
-		echo -n "Option $expected_string $@"
-		shift
-		dispatch example "$@"
-	}
-
-	short_repassing_call="$(: | example --fanz=borz foo)"
-
-	[ "Option ${expected_string} borz fooCommand ${expected_string} " = "$short_repassing_call" ]
-}

@@ -73,13 +73,9 @@ depur_command_coverage ()
 # Formats a stack into columns
 depur_command_format ()
 {
-	echo ""
-	# Removes the first line
-	sed '1d' | 
 	# Displays the stack in aligned columns
 	awk 'BEGIN {FS=OFS="\t"}
 	           { printf "        %-4s %-20s %-30s\n", $1, $2, $3}'
-	echo ""
 }
 
 # Processes the code coverage for one file

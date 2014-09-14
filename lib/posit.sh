@@ -3,6 +3,7 @@ posit () ( dispatch posit "$@" )
 
 # Global option defaults
 posit_files="*.test.sh"  # File name pattern for test files
+posit_functions="test_"
 posit_mode="tiny"        # Reporting mode to be used
 posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
@@ -22,6 +23,7 @@ posit_command_help ()
 	 Options: --report  [mode]    Changes the output mode.
 	          --shell   [shell]   Changes the shell used for tests.
 	          --files   [pattern] Inclusion pattern for test file lookup
+	          --funcs   [pattern] Inclusion pattern for test function lookup
 	          --timeout [time]    Timeout for each single test
 	          --fast,   -f        Stops on the first failed test.
 	          --silent, -s        Don't collect stacks, just run them.
@@ -37,14 +39,15 @@ posit_command_help ()
 # Option handlers
 posit_option_help    () ( posit_command_help )
 posit_option_h       () ( posit_command_help )
-posit_option_shell   () ( posit_shell="$1";   shift && dispatch posit "$@" )
-posit_option_files   () ( posit_files="$1";   shift && dispatch posit "$@" )
-posit_option_timeout () ( posit_timeout="$1"; shift && dispatch posit "$@" )
-posit_option_report  () ( posit_mode "$1" &&  shift && dispatch posit "$@" )
-posit_option_f       () ( posit_fast="1";              dispatch posit "$@" )
-posit_option_fast    () ( posit_fast="1";              dispatch posit "$@" )
-posit_option_s       () ( posit_silent="1";            dispatch posit "$@" )
-posit_option_silent  () ( posit_silent="1";            dispatch posit "$@" )
+posit_option_shell   () ( posit_shell="$1";     shift && dispatch posit "$@" )
+posit_option_files   () ( posit_files="$1";     shift && dispatch posit "$@" )
+posit_option_funcs   () ( posit_functions="$1"; shift && dispatch posit "$@" )
+posit_option_timeout () ( posit_timeout="$1";   shift && dispatch posit "$@" )
+posit_option_report  () ( posit_mode "$1" &&    shift && dispatch posit "$@" )
+posit_option_f       () ( posit_fast="1";                dispatch posit "$@" )
+posit_option_fast    () ( posit_fast="1";                dispatch posit "$@" )
+posit_option_s       () ( posit_silent="1";              dispatch posit "$@" )
+posit_option_silent  () ( posit_silent="1";              dispatch posit "$@" )
 
 posit_     () ( echo "No command provided. Try 'posit --help'";return 1 )
 posit_call_ () ( echo "Call '$@' invalid. Try 'posit --help'"; return 1)
@@ -193,7 +196,7 @@ posit_listdir ()
 posit_listfile ()
 {
 	target_file="$1"
-	signature="/^\(test_[a-zA-Z0-9_]*\)[	 ]*/p"
+	signature="/^\(${posit_functions}[a-zA-Z0-9_]*\)[	 ]*/p"
 
 	cat "$target_file" | sed -n "$signature" | cut -d" " -f1 |
 		while read line; do

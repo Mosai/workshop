@@ -1,5 +1,8 @@
-. "$POSIT_DIR/../../lib/dispatch.sh"
-. "$POSIT_DIR/../../lib/posit.sh"
+setup () 
+{
+	. "$POSIT_DIR/../../lib/dispatch.sh"
+	. "$POSIT_DIR/../../lib/posit.sh"
+}
 
 test_posit_empty_call_dispatch ()
 {
@@ -13,6 +16,60 @@ test_posit_empty_invalid_dispatch ()
 	invalid_call="$(posit foobarbaz)"
 	
 	[ "$invalid_call" = "Call 'posit foobarbaz' invalid. Try 'posit --help'" ]
+}
+
+
+test_posit_option_flag_dispatch ()
+{
+	# Stub all flag handlers
+	posit_option_report  () ( true )
+	posit_option_shell   () ( true )
+	posit_option_files   () ( true )
+	posit_option_funcs   () ( true )
+	posit_option_timeout () ( true )
+	posit_option_fast    () ( true )
+	posit_option_silent  () ( true )
+	posit_option_f       () ( true )
+	posit_option_s       () ( true )
+
+	# All calls should touch the handlers and return true
+	posit --report  &&
+	posit --shell   &&
+	posit --files   &&
+	posit --funcs   &&
+	posit --timeout &&
+	posit --fast    &&
+	posit --silent  &&
+	posit -f        &&
+	posit -s
+}
+
+test_posit_option_flag_redispatch ()
+{
+	# Stubs a command that should be called after options are set
+	posit_command_mockpass () ( true )
+	posit_unit_foo () ( true )
+
+	# All calls should touch the handlers and return true
+	posit --report  foo mockpass &&
+	posit --shell   foo mockpass &&
+	posit --files   foo mockpass &&
+	posit --funcs   foo mockpass &&
+	posit --timeout foo mockpass &&
+	posit --fast    mockpass &&
+	posit --silent  mockpass &&
+	posit -f        mockpass &&
+	posit -s        mockpass
+}
+
+test_posit_report_flag_checks_available_report_modes ()
+{
+	# Stubs a command that should be called after options are set
+	posit_command_mockpass () ( true )
+
+	posit --report=invalid___ mockpass
+
+	[ $? = 1 ]
 }
 
 test_posit_list_using_files ()
@@ -101,9 +158,7 @@ test_posit_process_with_single_test ()
 
 	posit_mode="mock"
 	echo $file_mock_location | 
-	posit_process "$POSIT_DIR/re
-
-	sources/" |
+	posit_process "$POSIT_DIR/resources/" |
 	check
 }
 
@@ -233,28 +288,4 @@ test_posit_head_spec ()
 	result="$(posit_head_spec "/foo/bar" | sed '1d;$d')"
 
 	[ "$result" = "### /foo/bar" ]
-}
-
-test_posit_unit_cov ()
-{
-	unit_results_mock ()
-	{
-		cat <<-RESULTS
-
-			This line should be removed
-			+	somefile.sh:2	This line stays!
-
-			This line should be removed
-
-			+	somefile.sh:3	This line stays!			
-			++	somefile.sh:4	This line stays!			
-			++  :3				This line should be removed
-		RESULTS
-	}
-	unit_results=$(unit_results_mock | cat)
-
-	result="$(posit_unit_cov "/foo/bar" "test_foo_bar" 0 "$unit_results")"
-	line_count="$(echo "$result" |  grep somefile.sh | wc -l )"
-
-	[ $line_count = 3 ]
 }

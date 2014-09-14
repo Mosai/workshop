@@ -1,5 +1,8 @@
-. "$POSIT_DIR/../../lib/dispatch.sh"
-. "$POSIT_DIR/../../lib/depur.sh"
+setup ()
+{
+	. "$POSIT_DIR/../../lib/dispatch.sh"
+	. "$POSIT_DIR/../../lib/depur.sh"
+}
 
 test_depur_empty_call_dispatch ()
 {
@@ -13,6 +16,36 @@ test_depur_empty_invalid_dispatch ()
 	invalid_call="$(depur foobarbaz)"
 	
 	[ "$invalid_call" = "Call 'depur foobarbaz' invalid. Try 'depur --help'" ]
+}
+
+test_depur_option_flag_dispatch ()
+{
+	# Stub all flag handlers
+	depur_option_f     () ( true )
+	depur_option_full  () ( true )
+	depur_option_short () ( true )
+	depur_option_s     () ( true )
+	depur_option_shell () ( true )
+
+	# All calls should touch the handlers and return true
+	depur -f      &&
+	depur --full  &&
+	depur --short &&
+	depur -s      &&
+	depur --shell
+}
+
+test_depur_option_flag_redispatch ()
+{
+	# Stubs a command that should be called after options are set
+	depur_command_mockpass () ( true )
+
+	# All calls should touch the handlers and return true
+	depur -f      mockpass &&
+	depur --full  mockpass &&
+	depur --short mockpass &&
+	depur -s      mockpass &&
+	depur --shell sh mockpass
 }
 
 test_depur_coverage_counts_lines_properly ()
@@ -50,4 +83,23 @@ test_depur_coverage_counts_lines_properly ()
 	output | depur_command_coverage | check
 }
 
+test_depur_clean ()
+{
+	unit_results_mock ()
+	{
+		cat <<-RESULTS
 
+			This line should be removed
+			+	somefile.sh:2	This line stays!
+
+			This line should be removed
+
+			+	somefile.sh:3	This line stays!			
+			++	somefile.sh:4	This line stays!			
+			++  :3				This line should be removed
+		RESULTS
+	}
+	line_count="$(unit_results_mock | depur_clean | wc -l )"
+
+	[ $line_count = 3 ]
+}

@@ -16,19 +16,18 @@ dispatch ()
 
 	# Detects if a command, --long or -short option was called
 	if [ "$arg" = "--$long" ];then
-		# Allows --long-options-with=values
-		set -- ${namespace}_option_$(echo "$long" | tr '=' ' ') $@
+		main_call=${namespace}_option_${long}
 	elif [ "$arg" = "-$short" ];then
-		set -- ${namespace}_option_${short} $@
+		main_call=${namespace}_option_${short}
 	else
-		set -- ${namespace}_command_${long} $@
+		main_call=${namespace}_command_${long}
 	fi
 
 	# Warn if dispatched function not found
-	if ! command -v $1 1>/dev/null 2>/dev/null; then
+	if ! command -v $main_call 1>/dev/null 2>/dev/null; then
 		${namespace}_call_ $namespace $arg # Empty call placeholder
 		return 1
 	fi
 
-	$@
+	$main_call "$@"
 }
