@@ -8,7 +8,10 @@ trix_env_functions="env_"
 trix_command_help ()
 {
 	cat <<-HELP
-	   Usage: trix run [file] Run a matrix file
+	   Usage: trix [option_list...] [command]
+	          trix help, -h, --help [command]  Displays help for command.
+
+	Commands: run  [file]  Runs the target matrix file
 	HELP
 }
 
@@ -18,9 +21,9 @@ trix_call_ () ( echo "Call '$@' invalid. Try 'trix --help'";   return 1 )
 trix_command_run ()
 {
 	target_file="$1"
-	environments="$(trix_probe "$target_file" $trix_env_functions)"
+	environments="$(trix_probe $trix_env_functions "$target_file")"
 
-	trix_probe $1 $trix_matrix_functions | 
+	trix_probe $trix_matrix_functions "$target_file" | 
 		while read matrix_entry; do
 			trix_process "$target_file" "$matrix_entry"
 		done
@@ -83,43 +86,54 @@ trix_process ()
 				continue
 			fi
 
-			include () ( : )
-			exclude () ( : )
-			setup   () ( : )
-			script  () ( : )
-			clean   () ( : )
-			var     () ( trix_parsevar "$@" )
-
-			for env_setting in $entry; do
-				eval "$($env_setting)"
-			done
-
-			echo "### $matrix_entry: $entry"
-			$matrix_entry
-			: | setup
-			: | script
-			: | clean
-
-			unset -f include
-			unset -f exclude
-			unset -f setup
-			unset -f script
-			unset -f clean
+			trix_process_entry "$matrix_entry" "$entry"
 		done
+}
+
+trix_process_entry ()
+{
+	matrix_entry="$1"
+	entry="$2"
+
+	include () ( : )
+	exclude () ( : )
+	setup   () ( : )
+	script  () ( : )
+	clean   () ( : )
+	var     () ( trix_parsevar "$@" )
+
+	for env_setting in $entry; do
+		eval "$($env_setting)"
+	done
+
+	echo "### $matrix_entry: $entry"
+	$matrix_entry
+	: | setup
+	: | script
+	: | clean
+
+	unset -f include
+	unset -f exclude
+	unset -f setup
+	unset -f script
+	unset -f clean
 }
 
 trix_parsevar ()
 {
+	if [ $# -gt 0 ]; then
+		echo -n "export "
+	fi
 	while [ $# -gt 0 ]; do
-		echo "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/export \1\"\2\"/"
+		echo -n "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
 		shift
 	done
 }
 
 trix_probe ()
 {
-	target_file="$1"
-	identifier="$2"
+	identifier="$1"
+	target_file="$2"
 	signature="/^\(\(${identifier}\)[a-zA-Z0-9_]*\)[	 ]*/p"
 
 	cat "$target_file" | sed -n "$signature" | cut -d" " -f1 |
