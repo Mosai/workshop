@@ -7,6 +7,9 @@ posit_path="$(cd "$(dirname "$0")/../lib";pwd)"
 dispatch () ( . "$posit_path/dispatch.sh" && dispatch "$@" )
 depur    () ( . "$posit_path/depur.sh"    && depur "$@" )
 
+. "$posit_path/posit/tiny.sh" || exit 1
+. "$posit_path/posit/cov.sh" || exit 1
+. "$posit_path/posit/spec.sh" || exit 1
 . "$posit_path/posit.sh" || exit 1
 
 # Enables word split on zsh

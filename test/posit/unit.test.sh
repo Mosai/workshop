@@ -1,6 +1,9 @@
 setup () 
 {
 	. "$POSIT_DIR/../../lib/dispatch.sh"
+	. "$POSIT_DIR/../../lib/posit/cov.sh"
+	. "$POSIT_DIR/../../lib/posit/spec.sh"
+	. "$POSIT_DIR/../../lib/posit/tiny.sh"
 	. "$POSIT_DIR/../../lib/posit.sh"
 }
 
