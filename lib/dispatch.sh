@@ -24,7 +24,7 @@ dispatch ()
 	fi
 
 	# Warn if dispatched function not found
-	if ! command -v $main_call 1>/dev/null 2>/dev/null; then
+	if ! command -v "$main_call" 1>/dev/null 2>/dev/null; then
 		${namespace}_call_ $namespace $arg # Empty call placeholder
 		return 1
 	fi

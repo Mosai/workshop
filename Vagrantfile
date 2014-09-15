@@ -85,45 +85,4 @@ Vagrant.configure("2") do |config|
     machine.vm.provision :shell, :inline => "sudo yum install -y dash bash zsh ksh busybox mksh"
   end
 
-  config.vm.define "opensuse1364", autostart: false do |machine|
-    machine.vm.box = "berendt/opensuse-13.1-x86_64"
-    machine.vm.synced_folder './', '/vagrant', type: 'rsync'
-    
-    # Install several shells for fun and testing.
-    machine.vm.provision :shell, :inline => "sudo zypper --non-interactive refresh"
-    machine.vm.provision :shell, :inline => "sudo zypper --non-interactive rsync install ksh zsh busybox pdksh dash"
-  end
-
-  config.vm.define "opensuse1264", autostart: false do |machine|
-    machine.vm.box = "opensuse-12.3"
-    machine.vm.box_url = "http://sourceforge.net/projects/opensusevagrant/files/12.3/opensuse-12.3-64.box/download"
-    machine.vm.synced_folder './', '/vagrant', type: 'rsync'
-    
-    # Install several shells for fun and testing.
-    machine.vm.provision :shell, :inline => "sudo zypper --non-interactive refresh"
-    machine.vm.provision :shell, :inline => "sudo zypper --non-interactive rsync install ksh zsh busybox pdksh dash"
-  end
-
-  config.vm.define "freebsd1064", autostart: false do |machine|
-    machine.vm.box = "chef/freebsd-10.0"
-    # FreeBSD does not have bash, using sh (it's fine, we're portable.)
-    machine.ssh.shell = "sh"
-    # FreeBSD requires a private network to...
-    machine.vm.network "private_network", ip: "192.168.50.4"
-    # ... be able to sync folders using NFS. Only NFS works.
-    # You may need to `sudo apt-get install nfs-kernel-server nfs-common portmap`
-    machine.vm.synced_folder './', '/vagrant', type: 'nfs'
-
-    # Install several shells for fun and testing.
-    machine.vm.provision :shell, :inline => "sudo pkg install -y rsync dash bash pdksh mksh busybox"
-  end
-
-  config.vm.define "archlinux", autostart: false do |machine|
-    machine.vm.box = "terrywang/archlinux"
-    machine.vm.synced_folder './', '/vagrant', type: 'rsync'
-
-    # Install several shells for fun and testing.
-    machine.vm.provision :shell, :inline => "sudo pacman -S --noconfirm zsh mksh dash busybox"
-  end
-
 end

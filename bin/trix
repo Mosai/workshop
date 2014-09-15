@@ -1,0 +1,14 @@
+#/usr/bin/env sh
+
+# Gets the lib folder relative to this script location
+# If this script is in /foo/bin, points to /foo/lib
+trix_path="$(cd "$(dirname "$0")/../lib";pwd)"
+
+dispatch () ( . "$trix_path/dispatch.sh" && dispatch "$@" )
+
+. "$trix_path/trix.sh" || exit 1
+
+# Enables word split on zsh
+command -v setopt 2>/dev/null >/dev/null && setopt SH_WORD_SPLIT
+
+trix "$@"
