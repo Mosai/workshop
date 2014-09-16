@@ -1,3 +1,6 @@
+# Changes zsh globbing patterns
+command -v unsetopt 2>/dev/null >/dev/null && unsetopt NO_MATCH
+
 # Dispatches calls of commands and arguments
 dispatch ()
 {

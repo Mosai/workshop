@@ -44,9 +44,9 @@ matrix_local ()
 {
 	script () ( $TARGET_SHELL bin/posit --shell "$TARGET_SHELL" --report tiny run test/ )
 
-	include common_*
-	include shell_*
-	include extras_*
+	include "common_*"
+	include "shell_*"
+	include "extras_*"
 }
 
 # Virtual Test Matrix
@@ -62,12 +62,12 @@ matrix_virtual ()
 		vagrant ssh $VAGRANT_MACHINE -c "cd /vagrant; $posit_cmd"
 	}
 
-	include deb_* common_*
-	include deb_* shell_*
+	include "deb_*" "common_*"
+	include "deb_*" "shell_*"
 
-	include rpm_* common_*
-	include rpm_* shell_zsh
-	include rpm_* shell_ksh
+	include "rpm_*" "common_*"
+	include "rpm_*" shell_zsh
+	include "rpm_*" shell_ksh
 	exclude rpm_centos5 common_busybox
 	exclude rpm_centos5 common_dash
 }
@@ -97,9 +97,9 @@ matrix_travis ()
 		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL" --report spec run test/
 	}
 
-	include travis_linux common_*
-	include travis_linux shell_*
-	include travis_linux extras_*
+	include travis_linux "common_*"
+	include travis_linux "shell_*"
+	include travis_linux "extras_*"
 
 	include travis_osx shell_ksh
 	include travis_osx shell_mksh
