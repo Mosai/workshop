@@ -83,7 +83,7 @@ matrix_travis ()
 		[ -z "$SHELL_PKG" ] && return
 
 		# Install PPA if required
-		[ ! -z "$PPA_REQUIRED" ] && setup_ppa $PPA
+		[ ! -z "$PPA_REQUIRED" ] && setup_ppa $PPA_REQUIRED
 
 		# Install packages for linux
 		[ "Linux" = "$(uname -s)" ]  && setup_apt "$SHELL_PKG"
