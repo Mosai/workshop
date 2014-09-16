@@ -153,10 +153,10 @@ trix_process_entry ()
 trix_parsevar ()
 {
 	if [ $# -gt 0 ]; then
-		echo -n "export "
+		printf %s "export "
 	fi
 	while [ $# -gt 0 ]; do
-		echo -n "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
+		printf %s "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
 		shift
 	done
 }

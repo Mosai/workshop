@@ -10,9 +10,9 @@ posit_unit_tiny ()
 {
 	returned_code="$3"
 
-	([ "$returned_code" = 0 ] && echo -n "." ) || # . for pass
-	([ "$returned_code" = 3 ] && echo -n "S" ) || # S for skip
-	echo -n "F"                                   # F for failure
+	([ "$returned_code" = 0 ] && printf %s "." ) || # . for pass
+	([ "$returned_code" = 3 ] && printf %s "S" ) || # S for skip
+	printf %s "F"                                   # F for failure
 }
 # Count report for the "tiny" mode
 posit_count_tiny ()
@@ -21,10 +21,10 @@ posit_count_tiny ()
 	total="$2"
 	skipped="$3"
 
-	([ "$total"   -gt 0 ] && echo -n " $passed/$total passed.") ||
-	echo -n "No tests found."
+	([ "$total"   -gt 0 ] && printf %s " $passed/$total passed.") ||
+	printf %s "No tests found."
 
-	([ "$skipped" -gt 0 ] && echo -n " $skipped/$total skipped.")
+	([ "$skipped" -gt 0 ] && printf %s " $skipped/$total skipped.")
 	echo ""
 }
 

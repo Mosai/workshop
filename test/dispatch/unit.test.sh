@@ -58,10 +58,10 @@ test_dispatch_option_short_repassing ()
 	expected_string="Called!"
 	
 	example             () ( dispatch example "$@" )
-	example_command_foo () ( echo -n "Command $expected_string" )
+	example_command_foo () ( printf %s "Command $expected_string" )
 	example_option_f    () 
 	{
-		echo -n "Option $expected_string $@"
+		printf %s "Option $expected_string $@"
 		dispatch example "$@"
 	}
 
@@ -87,10 +87,10 @@ test_dispatch_option_long_repassing ()
 	expected_string="Called!"
 	
 	example             () ( dispatch example "$@" )
-	example_command_foo () ( echo -n "Command $expected_string $@" )
+	example_command_foo () ( printf %s "Command $expected_string $@" )
 	example_option_fanz () 
 	{
-		echo -n "Option $expected_string $@"
+		printf %s "Option $expected_string $@"
 		dispatch example "$@"
 	}
 

@@ -107,8 +107,8 @@ template_posit_runner ()
 {
 	reporting_mode="$1"
 
-	posit_command_list () ( echo -n "list_called $@ " )
-	posit_process () ( cat; echo -n "process_called $@ " )
+	posit_command_list () ( printf %s "list_called $@ " )
+	posit_process () ( cat; printf %s "process_called $@ " )
 
 	used_path="/path.sh"
 	called="$(posit --report $reporting_mode run "$used_path")"
