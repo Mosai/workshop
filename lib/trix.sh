@@ -80,6 +80,9 @@ trix_command_travis ()
 		while read matrix_entry; do
 
 			cat <<-TRAVISYML
+				# A courtesy of trix, a Mosai Workshop tool.
+				# Generated from the $matrix_entry on $target_file
+
 				script: 
 				    - $0 --matrix $matrix_entry --env "\$TRIX_ENV" run $target_file
 				matrix:
@@ -95,6 +98,7 @@ trix_command_travis ()
 			$matrix_entry | sort | uniq | 
 				while read entry; do
 					os=""
+					entry_vars_line=""
 
 					for env_entry in $entry; do
 						env_entry_vars="$(${env_entry})"
@@ -102,12 +106,16 @@ trix_command_travis ()
 
 						if [ $env_is_travis != 0 ]; then
 							os="$(echo "$env_entry_vars" | sed 's/TRAVIS_OS=//; s/"//g')"
+						else
+							entry_vars_line="${entry_vars_line}${env_entry_vars}"
 						fi
 
 					done
 
+					echo "       # Result environment:$entry_vars_line"
 					echo "       - env: TRIX_ENV=\"$entry\""
 					echo "         os: $os"
+					echo ""
 
 				done
 

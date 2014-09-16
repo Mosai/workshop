@@ -36,30 +36,43 @@ matrix_travis ()
 {
 	setup ()
 	{
-		if [ "yes" = "$PPA_REQUIRED" ]; then 
-			sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F5751EC8
-		fi
+		cat <<-INFO
 
-		if [ "yes" = "$PPA_REQUIRED" ]; then 
-			sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/agriffis/bashes/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"
-		fi
+			Initializing build for $TARGET_SHELL on $TRAVIS_OS...
 
-		if [ "Linux" = "$(uname -s)" ]; then 
-			sudo apt-get update -qq
-		fi
+		INFO
 
-		if [ "Linux" = "$(uname -s)" ]; then 
-			sudo apt-get install -y $SHELL_PKG
-		fi
+		if [ "Linux" = "$(uname -s)" ] && [ ! -z "$SHELL_PKG" ]; then 
 
-		if [ "Darwin" = "$(uname -s)" ]; then 
-			brew update
-		fi
+			if [ "yes" = "$PPA_REQUIRED" ]; then 
+				cat <<-INFO
 
-		if [ "Darwin" = "$(uname -s)" ]; then 
-			if [ ! -z "$SHELL_PKG" ]; then 
-				brew install $SHELL_PKG
+					A PPA is required for this environment. Installing...
+
+				INFO
+				sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F5751EC8 | sed 's/^/ >/'
+				sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/agriffis/bashes/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"
 			fi
+
+			cat <<-INFO
+
+				Packages from apt are required for this environment. Installing...
+
+			INFO
+			sudo apt-get update -qq | sed 's/^/ >/'
+			sudo apt-get install -y $SHELL_PKG | sed 's/^/ >/'
+		fi
+
+		if [ "Darwin" = "$(uname -s)" ] && [ ! -z "$SHELL_PKG" ]; then 
+
+			cat <<-INFO
+
+				Packages from brew are required for this environment. Installing...
+
+			INFO
+
+			brew update | sed 's/^/ >/'
+			brew install $SHELL_PKG | sed 's/^/ >/'
 		fi
 	}
 
