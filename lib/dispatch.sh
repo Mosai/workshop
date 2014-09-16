@@ -16,7 +16,18 @@ dispatch ()
 
 	# Detects if a command, --long or -short option was called
 	if [ "$arg" = "--$long" ];then
+		longname="${long%%=*}" # Long argument before the first = sign
+
+		# Detects if the --long=option has = sign
+		if [ "$long" != "$longname" ]; then
+			longval="${long#*=}"
+			long="$longname"
+			set -- "$longval" "$@"
+		fi
+
 		main_call=${namespace}_option_${long}
+
+
 	elif [ "$arg" = "-$short" ];then
 		main_call=${namespace}_option_${short}
 	else

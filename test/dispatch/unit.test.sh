@@ -99,3 +99,59 @@ test_dispatch_option_long_repassing ()
 	[ "Option ${expected_string} fooCommand ${expected_string} " = "$short_repassing_call" ]
 }
 
+
+test_dispatch_option_long_with_equal_sign ()
+{
+	expected_string="Called option"
+	
+	example             () ( dispatch example "$@" )
+	example_option_fanz () ( echo "$expected_string $@"; shift )
+
+	long_call="$(: | example --fanz=bar baz)"
+
+	[ "$expected_string bar baz" = "$long_call" ]
+}
+
+
+test_dispatch_option_long_with_equal_sign_and_quotes ()
+{
+	expected_string="Called option"
+	
+	example             () ( dispatch example "$@" )
+	example_option_fanz () ( echo "$expected_string $@"; shift )
+
+	long_call="$(: | example --fanz="bar baz")"
+
+	[ "$expected_string bar baz" = "$long_call" ]
+}
+
+
+test_dispatch_option_long_with_equal_sign_quotes_and_equal_value ()
+{
+	expected_string="Called option"
+	
+	example             () ( dispatch example "$@" )
+	example_option_fanz () ( echo "$expected_string $@"; shift )
+
+	long_call="$(: | example --fanz="bar=baz")"
+
+	[ "$expected_string bar=baz" = "$long_call" ]
+}
+
+test_dispatch_option_long_repassing_with_equal_sign ()
+{
+	expected_string="Called!"
+	
+	example             () ( dispatch example "$@" )
+	example_command_foo () ( printf %s "Command $expected_string $@" )
+	example_option_fanz () 
+	{
+		printf %s "Option $expected_string $@"
+		shift
+		dispatch example "$@"
+	}
+
+	short_repassing_call="$(: | example --fanz="bla=bar" foo)"
+
+	[ "Option ${expected_string} bla=barfooCommand ${expected_string} " = "$short_repassing_call" ]
+}
