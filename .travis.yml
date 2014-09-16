@@ -1,5 +1,5 @@
 script: 
-    - bin/trix --matrix matrix_travis --env $TRIX_ENV run test/matrix.sh
+    - bin/trix --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
 matrix:
     include:
        - env: TRIX_ENV="env_travis_linux env_common_bash"

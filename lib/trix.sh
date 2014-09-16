@@ -81,7 +81,7 @@ trix_command_travis ()
 
 			cat <<-TRAVISYML
 				script: 
-				    - $0 --matrix $matrix_entry --env \$TRIX_ENV run $target_file
+				    - $0 --matrix $matrix_entry --env "\$TRIX_ENV" run $target_file
 				matrix:
 				    include:
 			TRAVISYML
