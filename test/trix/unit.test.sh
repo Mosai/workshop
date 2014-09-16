@@ -20,28 +20,28 @@ test_trix_empty_invalid_dispatch ()
 
 test_trix_parsevar_with_one_variable ()
 {
-	parsed="$(trix_parsevar FOO=bar)"
+	parsed="$(trix_parsevar "export" FOO=bar)"
 
 	[ "$parsed" = 'export FOO="bar" ' ]
 }
 
 test_trix_parsevar_with_more_variables ()
 {
-	parsed="$(trix_parsevar FOO=bar BAR=baz)"
+	parsed="$(trix_parsevar "export" FOO=bar BAR=baz)"
 
 	[ "$parsed" = 'export FOO="bar" BAR="baz" ' ]
 }
 
 test_trix_parsevar_with_quoted_variables ()
 {
-	parsed="$(trix_parsevar FOO="bar zoo" BAR="baz ZAZ")"
+	parsed="$(trix_parsevar "export" FOO="bar zoo" BAR="baz ZAZ")"
 
 	[ "$parsed" = 'export FOO="bar zoo" BAR="baz ZAZ" ' ]
 }
 
 test_trix_parsevar_with_mixed_equal_signs ()
 {
-	parsed="$(trix_parsevar FOO="bar=zoo" BAR="baz ZAZ")"
+	parsed="$(trix_parsevar "export" FOO="bar=zoo" BAR="baz ZAZ")"
 
 	[ "$parsed" = 'export FOO="bar=zoo" BAR="baz ZAZ" ' ]
 }

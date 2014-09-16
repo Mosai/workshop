@@ -35,10 +35,22 @@ trix_command_run ()
 	target_file="$1"
 	environments="$(trix_probe_env "$target_file")"
 
-	trix_probe_matrix "$target_file" | 
-		while read matrix_entry; do
-			trix_process "$target_file" "$matrix_entry"
-		done
+	trix_probe_matrix "$target_file" | trix_iterate_matrix
+}
+
+trix_iterate_matrix ()
+{
+	run_passed=0
+
+	while read matrix_entry; do
+		trix_process "$target_file" "$matrix_entry"
+		
+		if [ $? != 0 ]; then
+			run_passed=1
+		fi
+	done
+
+	return $run_passed
 }
 
 trix_command_list ()
@@ -56,6 +68,50 @@ trix_command_list ()
 
 			$matrix_entry | sort | uniq
 
+		done
+}
+
+trix_command_travis ()
+{
+	target_file="$1"
+	environments="$(trix_probe_env "$target_file")"
+
+	trix_probe_matrix "$target_file" | 
+		while read matrix_entry; do
+
+			cat <<-TRAVISYML
+				script: 
+				    - $0 --matrix $matrix_entry --env \$TRIX_ENV run $target_file
+				matrix:
+				    include:
+			TRAVISYML
+
+			. $target_file
+
+			include () ( trix_spawn "" "$environments" "$@" )
+			exclude () ( trix_spawn "" "$environments" "$@" )
+			var     () ( trix_parsevar "" "$@" )
+
+			$matrix_entry | sort | uniq | 
+				while read entry; do
+					os=""
+
+					for env_entry in $entry; do
+						env_entry_vars="$(${env_entry})"
+						env_is_travis="$(echo "$env_entry_vars" | sed -n /TRAVIS_/p | wc -l)"
+
+						if [ $env_is_travis != 0 ]; then
+							os="$(echo "$env_entry_vars" | sed 's/TRAVIS_OS=//; s/"//g')"
+						fi
+
+					done
+
+					echo "       - env: TRIX_ENV=\"$entry\""
+					echo "         os: $os"
+
+				done
+
+			break
 		done
 }
 
@@ -108,17 +164,30 @@ trix_process ()
 	exclusions="$(echo "$entries" | grep "^-	" | sed "s/^[-]	//")"
 	all_entries="$(echo "$entries" | sed "s/^[-+]	//")"
 
-	echo "$all_entries" |
-		while read entry; do
+	echo "$all_entries" | trix_iterate_entries "$matrix_entry" "$exclusions"
+}
 
-			was_excluded="$(echo "$exclusions" | sed -n "/$entry/p" | wc -l)"
+trix_iterate_entries ()
+{
+	matrix_entry="$1"
+	exclusions="$2"
+	process_passed=0
 
-			if [ $was_excluded -gt 0 ]; then
-				continue
-			fi
+	while read entry; do
+		was_excluded="$(echo "$exclusions" | sed -n "/$entry/p" | wc -l)"
 
-			trix_process_entry "$matrix_entry" "$entry"
-		done
+		if [ $was_excluded -gt 0 ]; then
+			continue
+		fi
+
+		trix_process_entry "$matrix_entry" "$entry"
+
+		if [ $? != 0 ]; then
+			process_passed=1
+		fi
+	done
+
+	return $process_passed
 }
 
 trix_process_entry ()
@@ -131,7 +200,7 @@ trix_process_entry ()
 	setup   () ( : )
 	script  () ( : )
 	clean   () ( : )
-	var     () ( trix_parsevar "$@" )
+	var     () ( trix_parsevar "export " "$@" )
 
 	for env_setting in $entry; do
 		eval "$($env_setting)"
@@ -141,6 +210,7 @@ trix_process_entry ()
 	$matrix_entry
 	: | setup
 	: | script
+	script_passed=$?
 	: | clean
 
 	unset -f include
@@ -148,11 +218,15 @@ trix_process_entry ()
 	unset -f setup
 	unset -f script
 	unset -f clean
+
+	return $script_passed
 }
 
 trix_parsevar ()
 {
-	parsedvar="export "
+	prefix="$1"
+	shift
+	parsedvar="${prefix} "
 	
 	if [ $# = 0 ]; then
 		return

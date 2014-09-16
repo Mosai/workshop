@@ -8,7 +8,7 @@ overview of supported environments check our [Travis Builds](https://travis-ci.o
 If you want to run tests in your own machine, you can run our test matrix:
 
 ```sh
-bin/trix run test/matrix.sh
+bin/trix --matrix local run test/matrix.sh
 ```
 
 Vagrant is currently required to run the matrix.
