@@ -152,13 +152,19 @@ trix_process_entry ()
 
 trix_parsevar ()
 {
-	if [ $# -gt 0 ]; then
-		printf %s "export "
+	parsedvar="export "
+	
+	if [ $# = 0 ]; then
+		return
 	fi
+
 	while [ $# -gt 0 ]; do
-		printf %s "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
+		piece="$(printf %s "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /")"
+		parsedvar="${parsedvar}${piece}"
 		shift
 	done
+
+	echo "$parsedvar"
 }
 
 trix_probe ()
