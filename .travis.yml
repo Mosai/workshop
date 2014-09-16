@@ -10,27 +10,27 @@ matrix:
          os:  linux 
 
        # Result environment: TARGET_SHELL="busybox sh" SHELL_PKG="busybox" 
-       - env: TRIX_ENV="env_travis_linux env_common_busybox_sh"
+       - env: TRIX_ENV="env_travis_linux env_common_busybox"
          os:  linux 
 
        # Result environment: TARGET_SHELL="dash" SHELL_PKG="dash" 
        - env: TRIX_ENV="env_travis_linux env_common_dash"
          os:  linux 
 
-       # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="yes" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash2_05b"
+       # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+       - env: TRIX_ENV="env_travis_linux env_extras_bash2_0"
          os:  linux 
 
-       # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="yes" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash3_0_16"
+       # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+       - env: TRIX_ENV="env_travis_linux env_extras_bash3_0"
          os:  linux 
 
-       # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="yes" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash3_2_48"
+       # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+       - env: TRIX_ENV="env_travis_linux env_extras_bash3_2"
          os:  linux 
 
-       # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="yes" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash4_2_45"
+       # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+       - env: TRIX_ENV="env_travis_linux env_extras_bash4_2"
          os:  linux 
 
        # Result environment: TARGET_SHELL="zsh-beta" SHELL_PKG="zsh-beta" 
