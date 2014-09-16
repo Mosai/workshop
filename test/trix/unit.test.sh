@@ -65,9 +65,9 @@ test_trix_probe_with_results ()
 		PROBED
 	}
 
-	parsed="$(trix_probe sample_ /mocked/file)"
+	probed="$(trix_probe sample_ /mocked/file)"
 
-	[ "$parsed" = "sample_foo${nl}sample_bar" ]
+	[ "$probed" = "sample_foo${nl}sample_bar" ]
 }
 
 test_trix_probe_with_no_results ()
@@ -77,7 +77,54 @@ test_trix_probe_with_no_results ()
 "
 	cat () ( : )
 
-	parsed="$(trix_probe sample_ /mocked/file)"
+	probed="$(trix_probe sample_ /mocked/file)"
 
-	[ "$parsed" = "" ]
+	[ "$probed" = "" ]
+}
+
+test_trix_spawn ()
+{
+	nl="
+"
+	tab="	"
+	mock_environments="env_mock_foo${nl}env_mock_bar${nl}env_mock_baz"
+	spawned="$(trix_spawn "mock_mode" "$mock_environments" mock_*)"
+
+	[ "$spawned" = "mock_mode${tab}env_mock_foo${nl}mock_mode${tab}env_mock_bar${nl}mock_mode${tab}env_mock_baz" ]
+}
+
+test_trix_spawn_with_env_filter ()
+{
+	nl="
+"
+	tab="	"
+	mock_environments="env_mock_foo${nl}env_mock_foo_also${nl}env_mock_baz"
+	trix_env_filter="foo"
+	spawned="$(trix_spawn "mock_mode" "$mock_environments" mock_*)"
+
+	[ "$spawned" = "mock_mode${tab}env_mock_foo${nl}mock_mode${tab}env_mock_foo_also" ]
+}
+
+test_trix_probe_matrix_with_filter ()
+{
+
+	real_cat="$(which cat)"
+	cat () 
+	{
+		$real_cat <<-PROBED
+			matrix_foo () 
+			{
+				:
+			}
+			matrix_bar () 
+			{
+				:
+			}
+		PROBED
+	}
+
+	trix_matrix_filter="foo"
+	probed="$(trix_probe_matrix /mocked/file)"
+
+	[ "$probed" = "matrix_foo" ]	
 }

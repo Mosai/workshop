@@ -3,6 +3,8 @@ trix () ( dispatch trix "$@" )
 
 trix_matrix_functions="matrix_"
 trix_env_functions="env_"
+trix_env_filter=".*"
+trix_matrix_filter=".*"
 
 # Provides help
 trix_command_help ()
@@ -12,8 +14,18 @@ trix_command_help ()
 	          trix help, -h, --help [command]  Displays help for command.
 
 	Commands: run  [file]  Runs the target matrix file
+	          list [file]  Lists all tested environments
+
+	 Options: --env    [name]  Runs only the selected environment
+	          --matrix [name]  Runs only the selected matrix
+
 	HELP
 }
+
+trix_option_help   () ( trix_command_help )
+trix_option_h      () ( trix_command_help )
+trix_option_env    () ( trix_env_filter="$1";    shift && dispatch trix "$@" )
+trix_option_matrix () ( trix_matrix_filter="$1"; shift && dispatch trix "$@" )
 
 trix_      () ( echo "No command provided. Try 'trix --help'"; return 1 )
 trix_call_ () ( echo "Call '$@' invalid. Try 'trix --help'";   return 1 )
@@ -21,11 +33,29 @@ trix_call_ () ( echo "Call '$@' invalid. Try 'trix --help'";   return 1 )
 trix_command_run ()
 {
 	target_file="$1"
-	environments="$(trix_probe $trix_env_functions "$target_file")"
+	environments="$(trix_probe_env "$target_file")"
 
-	trix_probe $trix_matrix_functions "$target_file" | 
+	trix_probe_matrix "$target_file" | 
 		while read matrix_entry; do
 			trix_process "$target_file" "$matrix_entry"
+		done
+}
+
+trix_command_list ()
+{
+	target_file="$1"
+	environments="$(trix_probe_env "$target_file")"
+
+	trix_probe_matrix "$target_file" | 
+		while read matrix_entry; do
+
+			. $target_file
+
+			include () ( trix_spawn "run" "$environments" "$@" )
+			exclude () ( trix_spawn "skip" "$environments" "$@" )
+
+			$matrix_entry | sort | uniq
+
 		done
 }
 
@@ -45,9 +75,10 @@ trix_spawn ()
 		fi
 	done 
 
-	echo "$spawned" | while read full_entry; do
-		echo "$mode	$full_entry"
-	done
+	echo "$spawned" |
+		while read full_entry; do
+			echo "$mode	$full_entry"
+		done | grep "$trix_env_filter"
 }
 
 trix_spawn_merge ()
@@ -140,4 +171,14 @@ trix_probe ()
 		while read line; do
 			echo "$line"
 		done
+}
+
+trix_probe_env () 
+{
+	trix_probe "$trix_env_functions" "$@" 
+}
+
+trix_probe_matrix () 
+{
+	trix_probe "$trix_matrix_functions" "$@"| grep "$trix_matrix_filter"
 }
