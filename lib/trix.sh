@@ -84,9 +84,9 @@ trix_command_travis ()
 				# Generated from the $matrix_entry on $target_file
 
 				script: 
-				    - $0 --matrix $matrix_entry --env "\$TRIX_ENV" run $target_file
+				  - $0 --matrix $matrix_entry --env "\$TRIX_ENV" run $target_file
 				matrix:
-				    include:
+				  include:
 			TRAVISYML
 
 			. $target_file
@@ -112,9 +112,9 @@ trix_command_travis ()
 
 					done
 
-					echo "       # Result environment:$entry_vars_line"
-					echo "       - env: TRIX_ENV=\"$entry\""
-					echo "         os: $os"
+					echo "    # Result environment:$entry_vars_line"
+					echo "    - env: TRIX_ENV=\"$entry\""
+					echo "      os: $os"
 					echo ""
 
 				done

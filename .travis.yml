@@ -2,70 +2,70 @@
 # Generated from the matrix_travis on test/matrix.sh
 
 script: 
-    - bin/trix --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
+  - bin/trix --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
 matrix:
-    include:
-       # Result environment: TARGET_SHELL="bash" SHELL_PKG="bash" 
-       - env: TRIX_ENV="env_travis_linux env_common_bash"
-         os:  linux 
+  include:
+    # Result environment: TARGET_SHELL="bash" SHELL_PKG="bash" 
+    - env: TRIX_ENV="env_travis_linux env_common_bash"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="busybox sh" SHELL_PKG="busybox" 
-       - env: TRIX_ENV="env_travis_linux env_common_busybox"
-         os:  linux 
+    # Result environment: TARGET_SHELL="busybox sh" SHELL_PKG="busybox" 
+    - env: TRIX_ENV="env_travis_linux env_common_busybox"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="dash" SHELL_PKG="dash" 
-       - env: TRIX_ENV="env_travis_linux env_common_dash"
-         os:  linux 
+    # Result environment: TARGET_SHELL="dash" SHELL_PKG="dash" 
+    - env: TRIX_ENV="env_travis_linux env_common_dash"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="agriffis/bashes F5751EC8" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash2_0"
-         os:  linux 
+    # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    - env: TRIX_ENV="env_travis_linux env_extras_bash2_0"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="agriffis/bashes F5751EC8" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash3_0"
-         os:  linux 
+    # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    - env: TRIX_ENV="env_travis_linux env_extras_bash3_0"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="agriffis/bashes F5751EC8" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash3_2"
-         os:  linux 
+    # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    - env: TRIX_ENV="env_travis_linux env_extras_bash3_2"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="agriffis/bashes F5751EC8" 
-       - env: TRIX_ENV="env_travis_linux env_extras_bash4_2"
-         os:  linux 
+    # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    - env: TRIX_ENV="env_travis_linux env_extras_bash4_2"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="zsh-beta" SHELL_PKG="zsh-beta" 
-       - env: TRIX_ENV="env_travis_linux env_extras_zsh_beta"
-         os:  linux 
+    # Result environment: TARGET_SHELL="zsh-beta" SHELL_PKG="zsh-beta" 
+    - env: TRIX_ENV="env_travis_linux env_extras_zsh_beta"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="ksh" SHELL_PKG="ksh" 
-       - env: TRIX_ENV="env_travis_linux env_shell_ksh"
-         os:  linux 
+    # Result environment: TARGET_SHELL="ksh" SHELL_PKG="ksh" 
+    - env: TRIX_ENV="env_travis_linux env_shell_ksh"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="mksh" SHELL_PKG="mksh" 
-       - env: TRIX_ENV="env_travis_linux env_shell_mksh"
-         os:  linux 
+    # Result environment: TARGET_SHELL="mksh" SHELL_PKG="mksh" 
+    - env: TRIX_ENV="env_travis_linux env_shell_mksh"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="pdksh" SHELL_PKG="pdksh" 
-       - env: TRIX_ENV="env_travis_linux env_shell_pdksh"
-         os:  linux 
+    # Result environment: TARGET_SHELL="pdksh" SHELL_PKG="pdksh" 
+    - env: TRIX_ENV="env_travis_linux env_shell_pdksh"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="zsh" SHELL_PKG="zsh" 
-       - env: TRIX_ENV="env_travis_linux env_shell_zsh"
-         os:  linux 
+    # Result environment: TARGET_SHELL="zsh" SHELL_PKG="zsh" 
+    - env: TRIX_ENV="env_travis_linux env_shell_zsh"
+      os:  linux 
 
-       # Result environment: TARGET_SHELL="bash" SHELL_PKG="bash" 
-       - env: TRIX_ENV="env_travis_osx env_common_bash"
-         os:  osx 
+    # Result environment: TARGET_SHELL="bash" SHELL_PKG="bash" 
+    - env: TRIX_ENV="env_travis_osx env_common_bash"
+      os:  osx 
 
-       # Result environment: TARGET_SHELL="ksh" SHELL_PKG="ksh" 
-       - env: TRIX_ENV="env_travis_osx env_shell_ksh"
-         os:  osx 
+    # Result environment: TARGET_SHELL="ksh" SHELL_PKG="ksh" 
+    - env: TRIX_ENV="env_travis_osx env_shell_ksh"
+      os:  osx 
 
-       # Result environment: TARGET_SHELL="mksh" SHELL_PKG="mksh" 
-       - env: TRIX_ENV="env_travis_osx env_shell_mksh"
-         os:  osx 
+    # Result environment: TARGET_SHELL="mksh" SHELL_PKG="mksh" 
+    - env: TRIX_ENV="env_travis_osx env_shell_mksh"
+      os:  osx 
 
-       # Result environment: TARGET_SHELL="zsh" SHELL_PKG="zsh" 
-       - env: TRIX_ENV="env_travis_osx env_shell_zsh"
-         os:  osx 
+    # Result environment: TARGET_SHELL="zsh" SHELL_PKG="zsh" 
+    - env: TRIX_ENV="env_travis_osx env_shell_zsh"
+      os:  osx 
 

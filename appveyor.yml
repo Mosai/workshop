@@ -1,0 +1,15 @@
+# No version yet.
+version: "0.0.{build}"
+os: Windows Server 2012 R2
+
+# No build, no deploy
+build: off
+deploy: off
+
+# Git from chocolatey has the git bash we need
+install:
+  - cinst git
+
+test_script:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - cmd: bash -lc "bin/posit --report=spec run ./test/"

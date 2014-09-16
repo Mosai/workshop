@@ -5,8 +5,8 @@ Tools that [works on a lot of platforms](doc/platforms.md) and **don't require a
 
 Workshop is designed to be the ideal lighweight toolkit for software automation, provisioning and testing.
 
-[![Build Status](https://travis-ci.org/Mosai/workshop.svg?branch=master)](https://travis-ci.org/Mosai/workshop)
-
+[![Linux and OS X Build Status](https://travis-ci.org/Mosai/workshop.svg?branch=master)](https://travis-ci.org/Mosai/workshop)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/k560be2nhnu245i9/branch/master)](https://ci.appveyor.com/project/alganet/workshop/branch/master)
 
 The Tools
 ---------
