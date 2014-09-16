@@ -1,5 +1,5 @@
 posit_exec_cov   () ( posit_external "$1" "$2" "--full" 2>&1 )
-posit_all_cov    () ( depur coverage )
+posit_all_cov    () ( posit_process "$1" | depur coverage )
 posit_head_cov   () ( : )
 posit_unit_cov   () ( echo "$4" )
 posit_count_cov  () ( posit_count_spec "$@" )

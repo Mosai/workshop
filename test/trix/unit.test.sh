@@ -88,7 +88,7 @@ test_trix_spawn ()
 "
 	tab="	"
 	mock_environments="env_mock_foo${nl}env_mock_bar${nl}env_mock_baz"
-	spawned="$(trix_spawn "mock_mode" "$mock_environments" mock_*)"
+	spawned="$(trix_spawn "mock_mode" "$mock_environments" "mock_*")"
 
 	[ "$spawned" = "mock_mode${tab}env_mock_foo${nl}mock_mode${tab}env_mock_bar${nl}mock_mode${tab}env_mock_baz" ]
 }
@@ -100,7 +100,7 @@ test_trix_spawn_with_env_filter ()
 	tab="	"
 	mock_environments="env_mock_foo${nl}env_mock_foo_also${nl}env_mock_baz"
 	trix_env_filter="foo"
-	spawned="$(trix_spawn "mock_mode" "$mock_environments" mock_*)"
+	spawned="$(trix_spawn "mock_mode" "$mock_environments" "mock_*")"
 
 	[ "$spawned" = "mock_mode${tab}env_mock_foo${nl}mock_mode${tab}env_mock_foo_also" ]
 }

@@ -13,8 +13,8 @@ trix_command_help ()
 	   Usage: trix [option_list...] [command]
 	          trix help, -h, --help [command]  Displays help for command.
 
-	Commands: run  [file]  Runs the target matrix file
-	          list [file]  Lists all tested environments
+	Commands: run    [file]  Runs the target matrix file
+	          list   [file]  Lists all tested environments
 
 	 Options: --env    [name]  Runs only the selected environment
 	          --matrix [name]  Runs only the selected matrix
@@ -78,7 +78,7 @@ trix_spawn ()
 	echo "$spawned" |
 		while read full_entry; do
 			echo "$mode	$full_entry"
-		done | grep "$trix_env_filter"
+		done | sed -n "/$trix_env_filter/p"
 }
 
 trix_spawn_merge ()
@@ -180,5 +180,5 @@ trix_probe_env ()
 
 trix_probe_matrix () 
 {
-	trix_probe "$trix_matrix_functions" "$@"| grep "$trix_matrix_filter"
+	trix_probe "$trix_matrix_functions" "$@"| sed -n "/$trix_matrix_filter/p"
 }

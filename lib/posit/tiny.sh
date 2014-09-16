@@ -2,7 +2,7 @@
 # Single execution for the "tiny" report
 posit_exec_tiny () ( posit_external "$1" "$2" "--short" 2>/dev/null )
 # Filter for the overall test output on mode "tiny"
-posit_all_tiny  () ( cat )
+posit_all_tiny  () ( posit_process "$1" )
 # Header for each file report on mode "tiny"
 posit_head_tiny () ( : )
 # Report for each unit on mode "tiny"

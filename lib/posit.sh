@@ -62,9 +62,8 @@ posit_command_list ()
 # Run tests for the specified target path
 posit_command_run ()
 {
-	posit_command_list "$1" | # Lists all tests for the path
-	posit_process "$1"      | # Processes the tests
-	posit_all_${posit_mode}   # Post-processes the output
+	posit_command_list "$1"      | # Lists all tests for the path
+	posit_all_${posit_mode} "$1"   # Processes the tests
 }
 
 # Sets a reporting mode
