@@ -28,7 +28,7 @@ trix_option_env    () ( trix_env_filter="$1";    shift && dispatch trix "$@" )
 trix_option_matrix () ( trix_matrix_filter="$1"; shift && dispatch trix "$@" )
 
 trix_      () ( echo "No command provided. Try 'trix --help'"; return 1 )
-trix_call_ () ( echo "Call '$@' invalid. Try 'trix --help'";   return 1 )
+trix_call_ () ( echo "Call '$*' invalid. Try 'trix --help'";   return 1 )
 
 trix_command_run ()
 {
@@ -44,7 +44,7 @@ trix_iterate_matrix ()
 
 	while read matrix_entry; do
 		trix_process "$target_file" "$matrix_entry" || :
-		
+
 		if [ $? != 0 ]; then
 			run_passed=1
 		fi
@@ -58,10 +58,10 @@ trix_command_list ()
 	target_file="$1"
 	environments="$(trix_probe_env "$target_file")"
 
-	trix_probe_matrix "$target_file" | 
+	trix_probe_matrix "$target_file" |
 	while read matrix_entry; do
 
-		. $target_file
+		. "$target_file"
 
 		include () ( trix_spawn "run" "$environments" "$@" )
 		exclude () ( trix_spawn "skip" "$environments" "$@" )
@@ -76,7 +76,7 @@ trix_command_travis ()
 	target_file="$1"
 	environments="$(trix_probe_env "$target_file")"
 
-	trix_probe_matrix "$target_file" | 
+	trix_probe_matrix "$target_file" |
 	while read matrix_entry; do
 		command_options="--matrix $matrix_entry --env \"\$TRIX_ENV\""
 
@@ -84,18 +84,18 @@ trix_command_travis ()
 			# A courtesy of trix, a Mosai Workshop tool.
 			# Generated from the $matrix_entry on $target_file
 
-			script: 
+			script:
 			  - $0 $command_options run $target_file
 			matrix:
 			  include:
 		TRAVISYML
 
-		. $target_file
+		. "$target_file"
 
 		include () ( trix_spawn "" "$environments" "$@" )
 		exclude () ( trix_spawn "" "$environments" "$@" )
 
-		$matrix_entry | sort | uniq | 
+		$matrix_entry | sort | uniq |
 			while read entry; do
 				trix_travis_entry "$entry"
 			done
@@ -104,7 +104,7 @@ trix_command_travis ()
 	done
 }
 
-trix_travis_entry () 
+trix_travis_entry ()
 {
 	entry="$1"
 	os=""
@@ -145,12 +145,12 @@ trix_spawn ()
 		else
 			spawned="$(trix_spawn_merge "$spawned" $grouped)"
 		fi
-	done 
+	done
 
 	echo "$spawned" |
 	while read full_entry; do
 		echo "$mode	$full_entry"
-	done | 
+	done |
 	sed -n "/$trix_env_filter/p"
 }
 
@@ -181,7 +181,7 @@ trix_process ()
 	excluded="$(echo "$entries" | grep "^-	" | sed "s/^[-]	//")"
 	all_entries="$(echo "$entries" | sed "s/^[-+]	//")"
 
-	echo "$all_entries" | 
+	echo "$all_entries" |
 		trix_iterate_entries "$matrix_entry" "$excluded"
 }
 
@@ -212,6 +212,7 @@ trix_process_entry ()
 {
 	matrix_entry="$1"
 	entry="$2"
+	previous_errmode="$(set +o | grep errexit)"
 
 	include () ( : )
 	exclude () ( : )
@@ -227,8 +228,11 @@ trix_process_entry ()
 	echo "### $matrix_entry: $entry"
 	$matrix_entry
 	: | setup  1>&2
-	: | script 
+	set +e
+	: | script
 	script_passed=$?
+	# Restore previous error mode
+	$previous_errmode
 	: | clean  1>&2
 
 	unset -f include
@@ -246,7 +250,7 @@ trix_parsevar ()
 	shift
 	parsedvar="${prefix} "
 	add_quotes="s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
-	
+
 	if [ $# = 0 ]; then
 		return
 	fi
@@ -267,20 +271,20 @@ trix_probe ()
 	signature="/^\(\(${identifier}\)[a-zA-Z0-9_]*\)[	 ]*/p"
 
 	cat "$target_file"  |
-	sed -n "$signature" | 
+	sed -n "$signature" |
 	cut -d" " -f1       |
 	while read line; do
 		echo "$line"
 	done
 }
 
-trix_probe_env () 
+trix_probe_env ()
 {
-	trix_probe "$trix_env_functions" "$@" 
+	trix_probe "$trix_env_functions" "$@"
 }
 
-trix_probe_matrix () 
+trix_probe_matrix ()
 {
-	trix_probe "$trix_matrix_functions" "$@" | 
+	trix_probe "$trix_matrix_functions" "$@" |
 		sed -n "/$trix_matrix_filter/p"
 }
