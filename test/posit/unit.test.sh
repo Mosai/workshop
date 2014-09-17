@@ -1,4 +1,4 @@
-setup () 
+setup ()
 {
 	. "$POSIT_DIR/../../lib/dispatch.sh"
 	. "$POSIT_DIR/../../lib/posit/cov.sh"
@@ -10,14 +10,14 @@ setup ()
 test_posit_empty_call_dispatch ()
 {
 	empty_call="$(posit)"
-	
+
 	[ "$empty_call" = "No command provided. Try 'posit --help'" ]
 }
 
 test_posit_empty_invalid_dispatch ()
 {
 	invalid_call="$(posit foobarbaz)"
-	
+
 	[ "$invalid_call" = "Call 'posit foobarbaz' invalid. Try 'posit --help'" ]
 }
 
@@ -80,7 +80,7 @@ test_posit_list_using_files ()
 	posit_listfile () ( echo "$1 OK" )
 
 	expected_list="$(posit_command_list /usr/bin/env)"
-	
+
 	[ "$expected_list" = "/usr/bin/env OK" ]
 }
 
@@ -89,7 +89,7 @@ test_posit_list_using_directories ()
 	posit_listdir () ( echo "$1 OK" )
 
 	expected_list="$(posit_command_list /usr)"
-	
+
 	[ "$expected_list" = "/usr OK" ]
 }
 
@@ -145,7 +145,7 @@ test_posit_process_with_single_test ()
 	posit_unit_mock () ( echo "unit_mock called" )
 	posit_all_mock () ( cat )
 
-	check () 
+	check ()
 	{
 		result="$(cat)"
 		head_results="$(echo "$result" | grep "^head_mock called")"
@@ -160,7 +160,7 @@ test_posit_process_with_single_test ()
 	}
 
 	posit_mode="mock"
-	echo $file_mock_location | 
+	echo $file_mock_location |
 	posit_process "$POSIT_DIR/resources/" |
 	check
 }
@@ -185,7 +185,7 @@ test_posit_process_with_multiple_tests ()
 		LIST
 	}
 
-	check () 
+	check ()
 	{
 		result="$(cat)"
 		head_results="$(echo "$result" | grep "^head_mock called" | wc -l)"
@@ -200,7 +200,7 @@ test_posit_process_with_multiple_tests ()
 	}
 
 	posit_mode="mock"
-	mocklist | 
+	mocklist |
 		posit_process "$POSIT_DIR/resources/" |
 		check
 }
@@ -223,7 +223,7 @@ template_posit_unit ()
 {
 	expected_mode="$1"
 	expected_code="$2"
-	expected_string="$3"	
+	expected_string="$3"
 
 	result="$(posit_unit_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
 	pass_results="$(echo "$result" | grep "$expected_string" | wc -l)"

@@ -1,4 +1,4 @@
-setup () 
+setup ()
 {
 	. "$POSIT_DIR/../../lib/dispatch.sh"
 	. "$POSIT_DIR/../../lib/trix.sh"
@@ -7,14 +7,14 @@ setup ()
 test_trix_empty_call_dispatch ()
 {
 	empty_call="$(trix)"
-	
+
 	[ "$empty_call" = "No command provided. Try 'trix --help'" ]
 }
 
 test_trix_empty_invalid_dispatch ()
 {
 	invalid_call="$(trix foobarbaz)"
-	
+
 	[ "$invalid_call" = "Call 'trix foobarbaz' invalid. Try 'trix --help'" ]
 }
 
@@ -51,14 +51,14 @@ test_trix_probe_with_results ()
 	real_cat="$(which cat)"
 	nl="
 "
-	cat () 
+	cat ()
 	{
 		$real_cat <<-PROBED
-			sample_foo () 
+			sample_foo ()
 			{
 				:
 			}
-			sample_bar () 
+			sample_bar ()
 			{
 				:
 			}
@@ -109,14 +109,14 @@ test_trix_probe_matrix_with_filter ()
 {
 
 	real_cat="$(which cat)"
-	cat () 
+	cat ()
 	{
 		$real_cat <<-PROBED
-			matrix_foo () 
+			matrix_foo ()
 			{
 				:
 			}
-			matrix_bar () 
+			matrix_bar ()
 			{
 				:
 			}
@@ -126,5 +126,5 @@ test_trix_probe_matrix_with_filter ()
 	trix_matrix_filter="foo"
 	probed="$(trix_probe_matrix /mocked/file)"
 
-	[ "$probed" = "matrix_foo" ]	
+	[ "$probed" = "matrix_foo" ]
 }

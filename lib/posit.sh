@@ -159,7 +159,8 @@ posit_external ()
 	fi
 
 	# If timeout command is present, use it
-	if command -v timeout 2>/dev/null 1>/dev/null; then
+	if [ "$posit_timeout" != 0 ] &&
+	   command -v timeout 2>/dev/null 1>/dev/null; then
 
 		# Checks if this timeout version uses -t for duration
 		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then

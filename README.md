@@ -1,4 +1,4 @@
-Mosai Workshop 
+Mosai Workshop
 ==============
 
 Tools that [works on a lot of platforms](doc/platforms.md) and **don't require any dependencies** in most of them.

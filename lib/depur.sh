@@ -5,7 +5,7 @@ depur () ( dispatch depur "$@" )
 depur_trace_command=""  # Command to extract file/line info on stacks
 depur_filter="basename" # Filter used on file names when showing a stack trace
 depur_shell="sh"        # Shell used as interpreter
-depur_ignore=''
+depur_ignore='*'
 
 # Provides help
 depur_command_help ()

@@ -12,4 +12,4 @@ install:
 
 test_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - cmd: bash -lc "bin/posit --report=spec run ./test/"
+  - cmd: bash -lc "bin/posit --timeout=0 --report=spec run ./test/"

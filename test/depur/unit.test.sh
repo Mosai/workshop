@@ -7,14 +7,14 @@ setup ()
 test_depur_empty_call_dispatch ()
 {
 	empty_call="$(depur)"
-	
+
 	[ "$empty_call" = "No command provided. Try 'depur --help'" ]
 }
 
 test_depur_empty_invalid_dispatch ()
 {
 	invalid_call="$(depur foobarbaz)"
-	
+
 	[ "$invalid_call" = "Call 'depur foobarbaz' invalid. Try 'depur --help'" ]
 }
 
@@ -51,8 +51,8 @@ test_depur_option_flag_redispatch ()
 test_depur_coverage_counts_lines_properly ()
 {
 	posit_files=".fixture.sh"
-	
-	output () 
+
+	output ()
 	{
 		cat <<-INPUT
 			$POSIT_DIR/../posit/resources/posit_postcov.fixture.sh	4
@@ -94,8 +94,8 @@ test_depur_clean ()
 
 			This line should be removed
 
-			+	somefile.sh:3	This line stays!			
-			++	somefile.sh:4	This line stays!			
+			+	somefile.sh:3	This line stays!
+			++	somefile.sh:4	This line stays!
 			++  :3				This line should be removed
 		RESULTS
 	}
