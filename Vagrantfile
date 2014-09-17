@@ -10,11 +10,6 @@ Vagrant.configure("2") do |config|
     machine.vm.box = "ubuntu/trusty64"
   end
 
-  config.vm.define "lucid64", autostart: false do |machine|
-    machine.vm.box = "opscode-lucid64"
-    machine.vm.box_url = "http://opscode-vagrant-boxes.s3.amazonaws.com/ubuntu10.04-gems.box"
-  end
-
   config.vm.define "debian7464", autostart: false do |machine|
     machine.vm.box = "chef/debian-7.4"
   end
@@ -42,11 +37,5 @@ Vagrant.configure("2") do |config|
     machine.vm.synced_folder './', '/vagrant', type: 'rsync'
   end
 
-  config.vm.define "centos5", autostart: false do |machine|
-    machine.vm.box = "opscode-centos5"
-    machine.vm.box_url = "http://opscode-vagrant-boxes.s3.amazonaws.com/centos5-gems.box"
-    machine.ssh.pty = true
-    machine.vm.synced_folder './', '/vagrant', type: 'rsync'
-  end
 
 end

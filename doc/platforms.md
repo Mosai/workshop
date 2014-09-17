@@ -1,42 +1,52 @@
 Supported Platforms
 ===================
 
-Workshop is tested in a large number of distros and shells. It uses only
-POSIX Shell Scripts, so it is also architecture independent. For a quick
-overview of supported environments check our [Travis Builds](https://travis-ci.org/Mosai/workshop).
+Workshop is tested in a large number of distros and shells. It uses only POSIX Shell Scripts, so it is also architecture independent. For a quick overview of supported environments check our [Travis](https://travis-ci.org/Mosai/workshop) and [AppVeyor](https://ci.appveyor.com/project/alganet/workshop/branch/master) builds.
 
 If you want to run tests in your own machine, you can run our test matrix:
 
 ```sh
-bin/trix --matrix local run test/matrix.sh
+bin/trix --matrix=local run test/matrix.sh
 ```
 
-Vagrant is currently required to run the matrix.
+You can also run these tests in virtual machines. The following command
+runs all shells available one machine per time:
+
+```sh
+bin/trix --matrix=remote run test/matrix.sh
+```
+
+And if you want, you can run one shell per time, which is really slow but far more isolated:
+
+```sh
+bin/trix --matrix=virtual run test/matrix.sh
+```
 
 Distros Tested
 --------------
 
-  - **Unknown OS X** from the Travis CI.
-  - **Ubuntu 12.04** from the Travis CI and Vagrantfile.
-  - **Ubuntu 10.04** from the Vagrantfile.
-  - **Ubuntu 14.04** from the Vagrantfile.
-  - **Debian 7.4** from the Vagrantfile.
-  - **Debian 6.0.9** from the Vagrantfile.
-  - **Fedora 20** from the Vagrantfile.
-  - **Fedora 19** from the Vagrantfile.
-  - **CentOS 6.5** from the Vagrantfile.
-  - **CentOS 5** from the Vagrantfile.
+  - **Unknown OS X** from Travis CI.
+  - **Ubuntu 12.04** from Travis CI and test matrix.
+  - **Ubuntu 14.04** from test matrix.
+  - **Debian 7.4** from test matrix.
+  - **Debian 6.0.9** from test matrix.
+  - **Fedora 20** from test matrix.
+  - **Fedora 19** from test matrix.
+  - **CentOS 6.5** from test matrix.
+  - **Windows Server 2012** from AppVeyor.
 
-Although not automated yet, tests pass on OpenSuse, Arch and FreeBSD as well.
+Previous versions were tested on OpenSuse, Arch Linux, FreeBSD and older versions of Ubuntu and CentOS. Although they're not in our matrix, Workshop should work just fine on them.
 
 Shells Tested
 -------------
 
   - **bash**, default from each distro. Versions bash2.05b, bash3.0.16
-    bash3.2.48 and bash4.2.45 from PPA. Current brew bash on Travis.
-  - **zsh** and **zsh-beta** when available (Debian-based distros mostly.)
-  - **ksh** and **pdksh**, **mksh** when available.
-  - **dash** when available.
-  - **busybox sh** when available.
-
-Manual testing is also done on the [git bash](http://git-scm.com/download/win).
+    bash3.2.48 and bash4.2.45 from PPA.
+  - **zsh** and also **zsh-beta**.
+  - **ksh**
+  - **pdksh**
+  - **mksh**
+  - **yash**
+  - **dash**
+  - **busybox sh**
+  - **git bash** (on Windows).

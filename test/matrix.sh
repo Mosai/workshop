@@ -30,54 +30,60 @@ env_travis_osx   () ( var TRAVIS_OS="osx"   )
 # deb/rpm environment machines for vagrant
 env_deb_precise64   () ( var VAGRANT_MACHINE="precise64"  )
 env_deb_trusty64    () ( var VAGRANT_MACHINE="trusty64"   )
-env_deb_lucid64     () ( var VAGRANT_MACHINE="lucid64"    )
 env_deb_debian7464  () ( var VAGRANT_MACHINE="debian7464" )
 env_deb_debian6064  () ( var VAGRANT_MACHINE="debian6064" )
 env_rpm_fedora2064  () ( var VAGRANT_MACHINE="fedora2064" )
 env_rpm_fedora1964  () ( var VAGRANT_MACHINE="fedora1964" )
 env_rpm_centos6464  () ( var VAGRANT_MACHINE="centos6464" )
-env_rpm_centos5     () ( var VAGRANT_MACHINE="centos5"    )
 
 
 # Local Test Matrix
 matrix_local ()
 {
 	setup  () ( provision_chooser )
-	script () ( $TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
-					    --report tiny run "test/" )
+	script ()
+	{
+		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
+					--report tiny run "test/"
+	}
 
 	include "common_*"
 	include "shell_*"
+	include "extras_*"
 
-	# Only recent ubuntu has extras
-	if [ -f "/etc/lsb-release" ]; then
+}
+# Runs the local matrix on remote machines
+# Faster than matrix_virtual but not as isolated
+matrix_remote ()
+{
+	setup  () ( vagrant up   "$VAGRANT_MACHINE" )
+	clean  () ( vagrant halt "$VAGRANT_MACHINE" )
+	script ()
+	{
+		trix_cmd="bin/trix --matrix=local run test/matrix.sh"
 
-		. "/etc/lsb-release"
+		vagrant ssh "$VAGRANT_MACHINE" -c "cd /vagrant; $trix_cmd"
+	}
 
-		major_version="$(echo $DISTRIB_RELEASE | cut -d"." -f1)"
-
-		if [ "$DISTRIB_ID" = "Ubuntu" ] && 
-		   [ "$major_version" -gt 11 ]; then
-			include "extras_*"
-		fi
-	fi
+	include "deb_*"
+	include "rpm_*"
 }
 
 # Virtual Test Matrix
 matrix_virtual ()
 {
-	setup  () 
+	setup  ()
 	{
-		 vagrant up $VAGRANT_MACHINE
+		 vagrant up "$VAGRANT_MACHINE"
 		 provision_chooser
 	}
-	clean  () ( vagrant halt $VAGRANT_MACHINE )
-	script () 
+	clean  () ( vagrant halt "$VAGRANT_MACHINE" )
+	script ()
 	{
-		posit_opt=" --shell \"$TARGET_SHELL\" --report tiny"
+		posit_opt=" --shell \"$TARGET_SHELL\" --report spec"
 		posit_cmd="$TARGET_SHELL bin/posit $posit_opt run test/"
 
-		vagrant ssh $VAGRANT_MACHINE -c "cd /vagrant; $posit_cmd"
+		vagrant ssh "$VAGRANT_MACHINE" -c "cd /vagrant; $posit_cmd"
 	}
 
 	include "deb_*" "common_*"
@@ -86,35 +92,16 @@ matrix_virtual ()
 	include "rpm_*" "common_*"
 	include "rpm_*" shell_zsh
 	include "rpm_*" shell_ksh
-	exclude rpm_centos5 common_busybox
-	exclude rpm_centos5 common_dash
-}
-
-# Runs the local matrix on remote machines
-# Faster than matrix_virtual but not as isolated
-matrix_remote ()
-{
-	setup  () ( vagrant up   $VAGRANT_MACHINE )
-	clean  () ( vagrant halt $VAGRANT_MACHINE )
-	script () 
-	{
-		trix_cmd="bin/trix --matrix=local run test/matrix.sh"
-
-		vagrant ssh $VAGRANT_MACHINE -c "cd /vagrant; $trix_cmd"
-	}
-
-	include "deb_*"
-	include "rpm_*"
 }
 
 # Travis Matrix
 matrix_travis ()
 {
-	setup  () 
+	setup  ()
 	{
-		echo "Setting up build for '$TARGET_SHELL' on '$TRAVIS_OS'..." 
+		echo "Setting up build for '$TARGET_SHELL' on '$TRAVIS_OS'..."
 
-		provision_chooser 
+		provision_chooser
 	}
 
 	script ()
@@ -183,8 +170,8 @@ provision_ppa ()
 
 	echo "A PPA is required for this environment. Installing..."
 
-	sudo apt-key adv --keyserver $keyserver --recv-keys "$keys" | 
-	sed 's/^/ > /' 
+	sudo apt-key adv --keyserver $keyserver --recv-keys "$keys" |
+	sed 's/^/ > /'
 
 	echo "deb $address $dist main" | sudo tee -a "$sources_file"
 }

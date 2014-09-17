@@ -1,8 +1,8 @@
 Testing Mosai Workshop
 ----------------------
 
-Workshop is tested by its own testing tool `posit`. Although 
-the tool itself doesn't force any particular directory structure, 
+Workshop is tested by its own testing tool `posit`. Although
+the tool itself doesn't force any particular directory structure,
 we keep an in-house one:
 
 ```sh
@@ -16,5 +16,3 @@ test/                     # Main test directory
 └── [tool folder...]/     # Same for each tool
     └── ...
 ```
-
-Each test

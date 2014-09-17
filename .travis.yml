@@ -1,7 +1,7 @@
 # A courtesy of trix, a Mosai Workshop tool.
 # Generated from the matrix_travis on test/matrix.sh
 
-script: 
+script:
   - bin/trix --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
 matrix:
   include:
