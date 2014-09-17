@@ -1,6 +1,6 @@
 
 # Executes a single test
-posit_exec_spec () ( posit_external "$1" "$2" "--short" 2>&1 )
+posit_exec_spec () ( posit_external "$1" "$2" "--short" 2>&1 || false )
 posit_count_spec () ( echo ""; printf %s "Totals:"; posit_count_tiny "$@" )
 posit_all_spec () ( posit_process "$1" )
 # Reports a test file
@@ -19,7 +19,7 @@ posit_unit_spec ()
 	returned="$3"
 	results="$4"
 	test_status="fail:"
-		
+
 	if [ "$returned" = "0" ]; then
 		test_status="pass:"
 	elif [ "$returned" = "3" ]; then

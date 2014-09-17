@@ -2,13 +2,13 @@
 posit () ( dispatch posit "$@" )
 
 # Global option defaults
-posit_files="*.test.sh"  # File name pattern for test files
+posit_files=".test.sh"  # File name pattern for test files
 posit_functions="test_"
 posit_mode="tiny"        # Reporting mode to be used
 posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
 posit_silent="-1"        # Displays full stacks. Use -1 to turn off
-posit_timeout="3s"       # Timeout for each test
+posit_timeout="3"        # Timeout for each test
 
 # Displays help
 posit_command_help ()
@@ -50,7 +50,7 @@ posit_option_s       () ( posit_silent="1";              dispatch posit "$@" )
 posit_option_silent  () ( posit_silent="1";              dispatch posit "$@" )
 
 posit_      () ( echo "No command provided. Try 'posit --help'";return 1 )
-posit_call_ () ( echo "Call '$@' invalid. Try 'posit --help'"; return 1)
+posit_call_ () ( echo "Call '$*' invalid. Try 'posit --help'"; return 1)
 
 # Lists tests in the specified target path
 posit_command_list ()
@@ -67,7 +67,7 @@ posit_command_run ()
 }
 
 # Sets a reporting mode
-posit_mode () 
+posit_mode ()
 {
 	command -v "posit_unit_$1" 1>/dev/null 2>/dev/null
 
@@ -83,38 +83,44 @@ posit_mode ()
 posit_process ()
 {
 	mode="$posit_mode"
-	target="$1"
 	passed_count=0
 	total_count=0
 	last_file=""
-	current_file=""
 	skipped_count="0"
 
 	# Each line should have a file and a test function on that file
 	while read test_parameters; do
+		test_file="$(echo "$test_parameters" | cut -d " " -f1)"
+		test_func="$(echo "$test_parameters" | cut -d " " -f2)"
 		total_count=$((total_count+1))
-		results= # Resets the results variable
+		results='' # Resets the results variable
+		previous_errmode="$(set +o | grep errexit)"
+		skipped_return=3
 
 		# Detects when tests should skip
 		if [ "$skipped_count" -gt "0" ]; then
 			skipped_count=$((skipped_count+1))
-			posit_unit_$mode $test_parameters 3 "$results"
+			"posit_unit_$mode" "$test_file" "$test_func"\
+					   "$skipped_return" "$results"
 			continue
 		fi
 
-		# Stores the current test file name
-		current_file="$(echo "$test_parameters" | sed 's/ .*//')"
+		# Don't exit on errors
+		set +e
 		# Runs a test and stores results
-		results="$(: | posit_exec_$mode $test_parameters)"
+		results="$(: | "posit_exec_$mode" "$test_file" "$test_func")"
 		# Stores the returned code
 		returned=$?
+		# Restore previous error mode
+		$previous_errmode
 
 		# Displays a header when the file changes
-		[ "$current_file" != "$last_file" ] &&
-		posit_head_$mode "$current_file"
+		[ "$test_file" != "$last_file" ] &&
+		"posit_head_$mode" "$test_file"
 
 		# Run the customized report
-		posit_unit_$mode $test_parameters "$returned" "$results"
+		"posit_unit_$mode" "$test_file" "$test_func"\
+				   "$returned" "$results"
 
 		if [ $returned = 0 ]; then
 			passed_count=$((passed_count+1))
@@ -123,12 +129,12 @@ posit_process ()
 			skipped_count=1
 		fi
 
-		last_file="$current_file"
+		last_file="$test_file"
 	done
 
 	# Display results counter
-	posit_count_$mode $passed_count $total_count $skipped_count
-	
+	"posit_count_$mode" $passed_count $total_count $skipped_count
+
 	if [ "$passed_count" != "$total_count" ]; then
 		return 1
 	fi
@@ -142,19 +148,25 @@ posit_external ()
 	test_command="$posit_shell"
 	test_file="$1"
 	test_dir="$(dirname "$1")"
-	test_function="$2"
+	test_func="$2"
 	filter="$3"
 	tracer=""
 
 	# If not silent
 	if [ "$posit_silent" = "-1" ]; then
-		tracer="$(depur $filter tracer "$shell")"  # Set up stack
+		tracer="$(depur "$filter" tracer "$shell")"  # Set up stack
 		test_command="$shell -x"                   # Collect stack
 	fi
 
 	# If timeout command is present, use it
-	if [ command -v timeout 2>/dev/null 1>/dev/null ]; then
-		test_command="timeout $posit_timeout $test_command"
+	if command -v timeout 2>/dev/null 1>/dev/null; then
+
+		# Checks if this timeout version uses -t for duration
+		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then
+			test_command="timeout $posit_timeout $test_command"
+		else
+			test_command="timeout -t $posit_timeout $test_command"
+		fi
 	fi
 
 	# Declares env variables and executes the test in
@@ -163,10 +175,10 @@ posit_external ()
 	POSIT_CMD="$shell"              \
 	POSIT_FILE="$test_file"         \
 	POSIT_DIR="$test_dir"           \
-	POSIT_FUNCTION="$test_function" \
+	POSIT_FUNCTION="$test_func"     \
 	$test_command <<-EXTERNAL
 		# Compat options for zsh
-		command -v setopt 2>/dev/null >/dev/null && 
+		command -v setopt 2>/dev/null >/dev/null &&
 		setopt PROMPT_SUBST SH_WORD_SPLIT
 
 		setup    () ( : ) # Placeholder setup function
@@ -185,7 +197,8 @@ posit_listdir ()
 {
 	target_dir="$1"
 
-	find "$target_dir" -type f -name "$posit_files" |
+	find "$target_dir" -type f |
+	grep "$posit_files"        |
 	while read test_file; do
 		posit_listfile "$test_file"
 	done
@@ -198,7 +211,7 @@ posit_listfile ()
 	signature="/^\(${posit_functions}[a-zA-Z0-9_]*\)[	 ]*/p"
 
 	cat "$target_file"  |
-	sed -n "$signature" | 
+	sed -n "$signature" |
 	cut -d" " -f1       |
 	while read line; do
 		echo "$target_file $line"
