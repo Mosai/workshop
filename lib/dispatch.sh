@@ -10,8 +10,8 @@ dispatch ()
 	long="${short#*-}" # First argument without trailing --
 
 	# Exit and warn if no first argument is found
-	if [ -z "$arg" ]; then 
-		${namespace}_ # Call empty call placeholder
+	if [ -z "$arg" ]; then
+		"${namespace}_" # Call empty call placeholder
 		return 1
 	fi
 
@@ -39,7 +39,7 @@ dispatch ()
 
 	# Warn if dispatched function not found
 	if ! command -v "$main_call" 1>/dev/null 2>/dev/null; then
-		${namespace}_call_ $namespace $arg # Empty call placeholder
+		"${namespace}_call_" "$namespace" "$arg" # Empty placeholder
 		return 1
 	fi
 

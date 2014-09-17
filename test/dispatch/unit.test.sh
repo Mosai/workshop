@@ -42,7 +42,7 @@ test_dispatch_command ()
 test_dispatch_option_short ()
 {
 	expected_string="Called option"
-	
+
 	example          () ( dispatch example "$@" )
 	example_option_f () ( echo "$expected_string $@"; shift )
 
@@ -54,10 +54,10 @@ test_dispatch_option_short ()
 test_dispatch_option_short_repassing ()
 {
 	expected_string="Called!"
-	
+
 	example             () ( dispatch example "$@" )
 	example_command_foo () ( printf %s "Command $expected_string" )
-	example_option_f    () 
+	example_option_f    ()
 	{
 		printf %s "Option $expected_string $@"
 		dispatch example "$@"
@@ -71,7 +71,7 @@ test_dispatch_option_short_repassing ()
 test_dispatch_option_long ()
 {
 	expected_string="Called option"
-	
+
 	example             () ( dispatch example "$@" )
 	example_option_fanz () ( echo "$expected_string $@"; shift )
 
@@ -83,10 +83,10 @@ test_dispatch_option_long ()
 test_dispatch_option_long_repassing ()
 {
 	expected_string="Called!"
-	
+
 	example             () ( dispatch example "$@" )
 	example_command_foo () ( printf %s "Command $expected_string $@" )
-	example_option_fanz () 
+	example_option_fanz ()
 	{
 		printf %s "Option $expected_string $@"
 		dispatch example "$@"
@@ -101,7 +101,7 @@ test_dispatch_option_long_repassing ()
 test_dispatch_option_long_with_equal_sign ()
 {
 	expected_string="Called option"
-	
+
 	example             () ( dispatch example "$@" )
 	example_option_fanz () ( echo "$expected_string $@"; shift )
 
@@ -114,7 +114,7 @@ test_dispatch_option_long_with_equal_sign ()
 test_dispatch_option_long_with_equal_sign_and_quotes ()
 {
 	expected_string="Called option"
-	
+
 	example             () ( dispatch example "$@" )
 	example_option_fanz () ( echo "$expected_string $@"; shift )
 
@@ -127,7 +127,7 @@ test_dispatch_option_long_with_equal_sign_and_quotes ()
 test_dispatch_option_long_with_equal_sign_quotes_and_equal_value ()
 {
 	expected_string="Called option"
-	
+
 	example             () ( dispatch example "$@" )
 	example_option_fanz () ( echo "$expected_string $@"; shift )
 
@@ -139,10 +139,10 @@ test_dispatch_option_long_with_equal_sign_quotes_and_equal_value ()
 test_dispatch_option_long_repassing_with_equal_sign ()
 {
 	expected_string="Called!"
-	
+
 	example             () ( dispatch example "$@" )
 	example_command_foo () ( printf %s "Command $expected_string $@" )
-	example_option_fanz () 
+	example_option_fanz ()
 	{
 		printf %s "Option $expected_string $@"
 		shift

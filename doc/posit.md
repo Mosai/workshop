@@ -24,7 +24,7 @@ test_posit_list_using_files ()
 
   # Run the test
   expected_list="$(posit list /usr/bin/env)"
-  
+
   # Checks if the mock command was called
   [ "$expected_list" = "/usr/bin/env OK" ]
 }
@@ -45,7 +45,7 @@ The following variables are available for each test:
 Test Runner
 -----------
 
-You can run tests using the `$ bin/posit` tool from this package. This is 
+You can run tests using the `$ bin/posit` tool from this package. This is
 how the runner output is presented:
 
 ```
@@ -76,7 +76,7 @@ Totals: 8/8 passed.
 Flags
 -----
 
-Output from test functions is not displayed on the test runner unless any errors occour, 
+Output from test functions is not displayed on the test runner unless any errors occour,
 so you don't need to redirect it to `/dev/null` by yourself. You can ommit this behavior
 by setting `$ posit -s` or `$ posit --silent` before any command.
 
@@ -97,12 +97,12 @@ for the test (available on zsh, bash and ksh):
 ```
 ### test/posit/unit.test.sh
   - fail: posit empty call
-   +    unit.test.sh:12      dispatched=+                  
-   +    posit.sh:18      posit_demo 1 2 3          
-   +    :3                   echo 'OK 1' 2 3               
-   +    unit.test.sh:12      dispatched='OK 1 2 3'         
+   +    unit.test.sh:12      dispatched=+
+   +    posit.sh:18          posit_demo 1 2 3
+   +    :3                   echo 'OK 1' 2 3
+   +    unit.test.sh:12      dispatched='OK 1 2 3'
    +    unit.test.sh:14      [ 'OK 1 2 3' '=' 'OK 1 2 ' ']'
-   +    zsh:9                has_passed=1                  
+   +    zsh:9                has_passed=1
   - pass: posit help
   - pass: posit list using files
   - pass: posit list using directories
@@ -119,33 +119,43 @@ for the test (available on zsh, bash and ksh):
 You can ommit the stack by setting `$ posit -s` or `$ posit --silent` before the
 run command
 
-For dash and busybox, a simpler trace is still displayed without the files and 
+For dash and busybox, a simpler trace is still displayed without the files and
 line numbers.
 
 Code Coverage
 -------------
 
 Experimental code coverage reports are available for shells
-that support the rich stack traces. 
+that support the rich stack traces.
 
-This is an excerpt from the `$ bash bin/posit --spec=cov --shell=bash run test/dispatch` output:
+This is an excerpt from the `$ bash bin/posit --shell=bash --report=cov run test/dispatch/` output:
 
 ```
-> `-    # Detects if a command, --long or -short option was called`  
-> `10   if [ "$arg" = "--$long" ];then`
-> `-      # Allows --long-options-with=values`  
-> `9      set -- ${namespace}_option_$(echo "$long" | tr '=' ' ') $@`
-> `7    elif [ "$arg" = "-$short" ];then`
-> `2      set -- ${namespace}_option_${short} $@`
-> `-    else`  
-> `5      set -- ${namespace}_command_${long} $@`
-> `-    fi` 
+### /home/alganet/Projects/mosai/workshop/lib/dispatch.sh
 
-``` 
+> `-` `# Changes zsh globbing patterns`
+> `11`  `command -v unsetopt 2>/dev/null >/dev/null && unsetopt NO_MATCH`
+> `-`
+> `-` `# Dispatches calls of commands and arguments`
+> `-` `dispatch ()`
+> `-` `{`
+> `14`  ` namespace="$1"     # Namespace to be dispatched`
+> `14`  ` arg="$2"           # First argument`
+> `14`  ` short="${arg#*-}"  # First argument without trailing -`
+> `14`  ` long="${short#*-}" # First argument without trailing --`
+> `-`
+> `-` ` # Exit and warn if no first argument is found`
+> `14`  ` if [ -z "$arg" ]; then`
+> `1` `   "${namespace}_" # Call empty call placeholder`
+> `1` `   return 1`
+> `-` ` fi`
+```
 
-The number on the left is the number of passes that each specific line had. 
+The number on the left is the number of passes that each specific line had.
 Coverage information is subject to shell support:
 
   - **bash** presents the most accurate count.
   - **zsh** and **ksh** may miss some lines.
   - others have only support for stack traces without files/lines.
+
+The standard coverage output is Markdown.
