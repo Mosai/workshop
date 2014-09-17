@@ -17,19 +17,19 @@ matrix:
     - env: TRIX_ENV="env_travis_linux env_common_dash"
       os:  linux 
 
-    # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    # Result environment: TARGET_SHELL="bash2.05b" SHELL_PKG="bash2.05b" PPA_REQUIRED="agriffis/bashes precise F5751EC8" 
     - env: TRIX_ENV="env_travis_linux env_extras_bash2_0"
       os:  linux 
 
-    # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    # Result environment: TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16" PPA_REQUIRED="agriffis/bashes precise F5751EC8" 
     - env: TRIX_ENV="env_travis_linux env_extras_bash3_0"
       os:  linux 
 
-    # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    # Result environment: TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48" PPA_REQUIRED="agriffis/bashes precise F5751EC8" 
     - env: TRIX_ENV="env_travis_linux env_extras_bash3_2"
       os:  linux 
 
-    # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="agriffis/bashes F5751EC8" 
+    # Result environment: TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45" PPA_REQUIRED="agriffis/bashes precise F5751EC8" 
     - env: TRIX_ENV="env_travis_linux env_extras_bash4_2"
       os:  linux 
 

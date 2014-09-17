@@ -10,17 +10,18 @@ env_shell_zsh       () ( var TARGET_SHELL="zsh"        SHELL_PKG="zsh"     )
 env_shell_ksh       () ( var TARGET_SHELL="ksh"        SHELL_PKG="ksh"     )
 env_shell_pdksh     () ( var TARGET_SHELL="pdksh"      SHELL_PKG="pdksh"   )
 env_shell_mksh      () ( var TARGET_SHELL="mksh"       SHELL_PKG="mksh"    )
+env_shell_yash      () ( var TARGET_SHELL="yash"       SHELL_PKG="yash"    )
+env_shell_posh      () ( var TARGET_SHELL="posh"       SHELL_PKG="posh"    )
 
-# Extra shells for Debian-based distros provided by a PPA
-# See the setup_ppa helper function
+# Extra shells for Ubuntu versions higher than 11.
 env_extras_bash2_0  () ( var TARGET_SHELL="bash2.05b"  SHELL_PKG="bash2.05b"\
-	                     PPA_REQUIRED="agriffis/bashes F5751EC8" )
+	                     PPA_REQUIRED="agriffis/bashes precise F5751EC8" )
 env_extras_bash3_0  () ( var TARGET_SHELL="bash3.0.16" SHELL_PKG="bash3.0.16"\
-	                     PPA_REQUIRED="agriffis/bashes F5751EC8" )
+	                     PPA_REQUIRED="agriffis/bashes precise F5751EC8" )
 env_extras_bash3_2  () ( var TARGET_SHELL="bash3.2.48" SHELL_PKG="bash3.2.48"\
-	                     PPA_REQUIRED="agriffis/bashes F5751EC8" )
+	                     PPA_REQUIRED="agriffis/bashes precise F5751EC8" )
 env_extras_bash4_2  () ( var TARGET_SHELL="bash4.2.45" SHELL_PKG="bash4.2.45"\
-                             PPA_REQUIRED="agriffis/bashes F5751EC8" )
+                             PPA_REQUIRED="agriffis/bashes precise F5751EC8" )
 env_extras_zsh_beta () ( var TARGET_SHELL="zsh-beta"   SHELL_PKG="zsh-beta" )
 
 # Environments for Travis CI
@@ -42,17 +43,35 @@ env_rpm_centos5     () ( var VAGRANT_MACHINE="centos5"    )
 # Local Test Matrix
 matrix_local ()
 {
-	script () ( $TARGET_SHELL bin/posit --shell "$TARGET_SHELL" --report tiny run test/ )
+	setup  () ( provision_chooser )
+	script () ( $TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
+					    --report tiny run "test/" )
 
 	include "common_*"
 	include "shell_*"
-	include "extras_*"
+
+	# Only recent ubuntu has extras
+	if [ -f "/etc/lsb-release" ]; then
+
+		. "/etc/lsb-release"
+
+		major_version="$(echo $DISTRIB_RELEASE | cut -d"." -f1)"
+
+		if [ "$DISTRIB_ID" = "Ubuntu" ] && 
+		   [ "$major_version" -gt 11 ]; then
+			include "extras_*"
+		fi
+	fi
 }
 
 # Virtual Test Matrix
 matrix_virtual ()
 {
-	setup  () ( vagrant up   $VAGRANT_MACHINE )
+	setup  () 
+	{
+		 vagrant up $VAGRANT_MACHINE
+		 provision_chooser
+	}
 	clean  () ( vagrant halt $VAGRANT_MACHINE )
 	script () 
 	{
@@ -72,29 +91,37 @@ matrix_virtual ()
 	exclude rpm_centos5 common_dash
 }
 
+# Runs the local matrix on remote machines
+# Faster than matrix_virtual but not as isolated
+matrix_remote ()
+{
+	setup  () ( vagrant up   $VAGRANT_MACHINE )
+	clean  () ( vagrant halt $VAGRANT_MACHINE )
+	script () 
+	{
+		trix_cmd="bin/trix --matrix=local run test/matrix.sh"
+
+		vagrant ssh $VAGRANT_MACHINE -c "cd /vagrant; $trix_cmd"
+	}
+
+	include "deb_*"
+	include "rpm_*"
+}
+
 # Travis Matrix
 matrix_travis ()
 {
-	setup ()
+	setup  () 
 	{
-		echo "Setting up build for '$TARGET_SHELL' on '$TRAVIS_OS'..."
+		echo "Setting up build for '$TARGET_SHELL' on '$TRAVIS_OS'..." 
 
-		# No setup if environment has no packages
-		[ -z "$SHELL_PKG" ] && return
-
-		# Install PPA if required
-		[ ! -z "$PPA_REQUIRED" ] && setup_ppa $PPA_REQUIRED
-
-		# Install packages for linux
-		[ "Linux" = "$(uname -s)" ]  && setup_apt "$SHELL_PKG"
-
-		# Install packages for OS X
-		[ "Darwin" = "$(uname -s)" ] && setup_brew "$SHELL_PKG"
+		provision_chooser 
 	}
 
 	script ()
 	{
-		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL" --report spec run test/
+		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
+					--report spec run "test/"
 	}
 
 	include travis_linux "common_*"
@@ -107,36 +134,91 @@ matrix_travis ()
 	include travis_osx common_bash
 }
 
-# Helper function to add a ppa to the apt sources
-setup_ppa ()
+#
+# Provisioning Helper Functions (not actually part of the matrix)
+#
+
+# Chooses if new packages are needed and sets up them
+provision_chooser ()
 {
-	address="$1"
-	keys="$2"
+	main_shell_command="$(echo "$TARGET_SHELL" | cut -d" " -f1)"
+	# No setup if environment has no packages
+	[ -z "${SHELL_PKG-}" ] && return
+
+	# No setup if shell already present
+	command -v "$main_shell_command" 2>/dev/null 1>/dev/null && return
+
+	# Install PPA if required
+	[ ! -z "${PPA_REQUIRED-}" ]  && provision_ppa $PPA_REQUIRED
+
+	provision_package "$SHELL_PKG"
+}
+
+# Sets up a single package for apt, yum or brew
+provision_package ()
+{
+	package="$1"
+
+	# Install packages for debian-based linuxes
+	command -v apt-get 2>/dev/null 1>/dev/null && provision_apt "$package"
+
+	# Install packages for debian-based linuxes
+	command -v yum     2>/dev/null 1>/dev/null && provision_yum "$package"
+
+	# Install packages for OS X
+	command -v brew    2>/dev/null 1>/dev/null && provision_brew "$package"
+}
+
+# Helper function to add a ppa to the apt sources
+provision_ppa ()
+{
+	ppa_name="$1"
+	dist="$2"
+	keys="$3"
+	keyserver="keyserver.ubuntu.com"
+	sources_file="/etc/apt/sources.list"
+	address="http://ppa.launchpad.net/$ppa_name/ubuntu"
+	has_ppa="$(grep "^deb.*$ppa_name" "$sources_file" | wc -l)"
+
+	[ $has_ppa -gt 0 ] && return
 
 	echo "A PPA is required for this environment. Installing..."
 
-	sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys "$keys" | sed 's/^/ > /'
-	sudo bash -c ". /etc/lsb-release; echo deb http://ppa.launchpad.net/$address/ubuntu \$DISTRIB_CODENAME main >> /etc/apt/sources.list"
+	sudo apt-key adv --keyserver $keyserver --recv-keys "$keys" | 
+	sed 's/^/ > /' 
+
+	echo "deb $address $dist main" | sudo tee -a "$sources_file"
 }
 
 # Helper function to install apt packages
-setup_apt ()
+provision_apt ()
 {
 	pkgspec="$1"
 
-	echo "Packages from apt are required for this environment. Installing..."
+	echo "Packages from apt are required. Installing..."
 
-	sudo apt-get update -qq | sed 's/^/ > /'
+	sudo apt-get update -qq -y       | sed 's/^/ > /'
 	sudo apt-get install -y $pkgspec | sed 's/^/ > /'
 }
 
-# Helper function to install brew packages
-setup_brew ()
+# Helper function to install yum packages
+provision_yum ()
 {
 	pkgspec="$1"
 
-	echo "Packages from brew are required for this environment. Installing..."
+	echo "Packages from yum are required. Installing..."
 
-	brew update | sed 's/^/ > /'
+	sudo yum check-update        | sed 's/^/ > /'
+	sudo yum install -y $pkgspec | sed 's/^/ > /'
+}
+
+# Helper function to install brew packages
+provision_brew ()
+{
+	pkgspec="$1"
+
+	echo "Packages from brew are required. Installing..."
+
+	brew update           | sed 's/^/ > /'
 	brew install $pkgspec | sed 's/^/ > /'
 }
