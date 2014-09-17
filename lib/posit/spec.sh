@@ -15,15 +15,14 @@ posit_head_spec ()
 # Reports a single unit
 posit_unit_spec ()
 {
-	test_file="$1"
 	test_function="$2"
 	returned="$3"
 	results="$4"
 	test_status="fail:"
 		
-	if [ $returned = 0 ]; then
+	if [ "$returned" = "0" ]; then
 		test_status="pass:"
-	elif [ $returned = 3 ]; then
+	elif [ "$returned" = "3" ]; then
 		test_status="skip:"
 	else
 		returned=1

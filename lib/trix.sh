@@ -43,7 +43,7 @@ trix_iterate_matrix ()
 	run_passed=0
 
 	while read matrix_entry; do
-		trix_process "$target_file" "$matrix_entry"
+		trix_process "$target_file" "$matrix_entry" || :
 		
 		if [ $? != 0 ]; then
 			run_passed=1
@@ -59,16 +59,16 @@ trix_command_list ()
 	environments="$(trix_probe_env "$target_file")"
 
 	trix_probe_matrix "$target_file" | 
-		while read matrix_entry; do
+	while read matrix_entry; do
 
-			. $target_file
+		. $target_file
 
-			include () ( trix_spawn "run" "$environments" "$@" )
-			exclude () ( trix_spawn "skip" "$environments" "$@" )
+		include () ( trix_spawn "run" "$environments" "$@" )
+		exclude () ( trix_spawn "skip" "$environments" "$@" )
 
-			$matrix_entry | sort | uniq
+		$matrix_entry | sort | uniq
 
-		done
+	done
 }
 
 trix_command_travis ()
@@ -77,50 +77,58 @@ trix_command_travis ()
 	environments="$(trix_probe_env "$target_file")"
 
 	trix_probe_matrix "$target_file" | 
-		while read matrix_entry; do
+	while read matrix_entry; do
+		command_options="--matrix $matrix_entry --env \"\$TRIX_ENV\""
 
-			cat <<-TRAVISYML
-				# A courtesy of trix, a Mosai Workshop tool.
-				# Generated from the $matrix_entry on $target_file
+		cat <<-TRAVISYML
+			# A courtesy of trix, a Mosai Workshop tool.
+			# Generated from the $matrix_entry on $target_file
 
-				script: 
-				  - $0 --matrix $matrix_entry --env "\$TRIX_ENV" run $target_file
-				matrix:
-				  include:
-			TRAVISYML
+			script: 
+			  - $0 $command_options run $target_file
+			matrix:
+			  include:
+		TRAVISYML
 
-			. $target_file
+		. $target_file
 
-			include () ( trix_spawn "" "$environments" "$@" )
-			exclude () ( trix_spawn "" "$environments" "$@" )
-			var     () ( trix_parsevar "" "$@" )
+		include () ( trix_spawn "" "$environments" "$@" )
+		exclude () ( trix_spawn "" "$environments" "$@" )
 
-			$matrix_entry | sort | uniq | 
-				while read entry; do
-					os=""
-					entry_vars_line=""
+		$matrix_entry | sort | uniq | 
+			while read entry; do
+				trix_travis_entry "$entry"
+			done
 
-					for env_entry in $entry; do
-						env_entry_vars="$(${env_entry})"
-						env_is_travis="$(echo "$env_entry_vars" | sed -n /TRAVIS_/p | wc -l)"
+		break
+	done
+}
 
-						if [ $env_is_travis != 0 ]; then
-							os="$(echo "$env_entry_vars" | sed 's/TRAVIS_OS=//; s/"//g')"
-						else
-							entry_vars_line="${entry_vars_line}${env_entry_vars}"
-						fi
+trix_travis_entry () 
+{
+	entry="$1"
+	os=""
+	vars_line=""
 
-					done
 
-					echo "    # Result environment:$entry_vars_line"
-					echo "    - env: TRIX_ENV=\"$entry\""
-					echo "      os: $os"
-					echo ""
+	var () ( trix_parsevar "" "$@" )
 
-				done
+	for env_entry in $entry; do
+		vars="$(${env_entry})"
+		is_os_var="$(echo "$vars" | sed -n /TRAVIS_/p | wc -l)"
 
-			break
-		done
+		if [ $is_os_var != 0 ]; then
+			os="$(echo "$vars" | sed 's/TRAVIS_OS=//;s/"//g')"
+		else
+			vars_line="${vars_line}${vars}"
+		fi
+
+	done
+
+	echo "    # Result environment:$vars_line"
+	echo "    - env: TRIX_ENV=\"$entry\""
+	echo "      os: $os"
+	echo ""
 }
 
 trix_spawn ()
@@ -140,9 +148,10 @@ trix_spawn ()
 	done 
 
 	echo "$spawned" |
-		while read full_entry; do
-			echo "$mode	$full_entry"
-		done | sed -n "/$trix_env_filter/p"
+	while read full_entry; do
+		echo "$mode	$full_entry"
+	done | 
+	sed -n "/$trix_env_filter/p"
 }
 
 trix_spawn_merge ()
@@ -151,11 +160,11 @@ trix_spawn_merge ()
 	shift
 
 	echo "$spawned" |
-		while read spawned_line; do
-			for grouped_entry in $@; do
-				echo "$spawned_line $grouped_entry"
-			done
+	while read spawned_line; do
+		for grouped_entry in $@; do
+			echo "$spawned_line $grouped_entry"
 		done
+	done
 }
 
 trix_process ()
@@ -169,22 +178,23 @@ trix_process ()
 	exclude () ( trix_spawn "-" "$environments" "$@" )
 
 	entries="$($matrix_entry | sort | uniq)"
-	exclusions="$(echo "$entries" | grep "^-	" | sed "s/^[-]	//")"
+	excluded="$(echo "$entries" | grep "^-	" | sed "s/^[-]	//")"
 	all_entries="$(echo "$entries" | sed "s/^[-+]	//")"
 
-	echo "$all_entries" | trix_iterate_entries "$matrix_entry" "$exclusions"
+	echo "$all_entries" | 
+		trix_iterate_entries "$matrix_entry" "$excluded"
 }
 
 trix_iterate_entries ()
 {
 	matrix_entry="$1"
-	exclusions="$2"
+	excluded="$2"
 	process_passed=0
 
 	while read entry; do
-		was_excluded="$(echo "$exclusions" | sed -n "/$entry/p" | wc -l)"
+		is_excluded="$(echo "$excluded" | sed -n "/$entry/p" | wc -l)"
 
-		if [ $was_excluded -gt 0 ]; then
+		if [ $is_excluded -gt 0 ]; then
 			continue
 		fi
 
@@ -216,10 +226,10 @@ trix_process_entry ()
 
 	echo "### $matrix_entry: $entry"
 	$matrix_entry
-	: | setup
-	: | script
+	: | setup  1>&2
+	: | script 
 	script_passed=$?
-	: | clean
+	: | clean  1>&2
 
 	unset -f include
 	unset -f exclude
@@ -235,13 +245,14 @@ trix_parsevar ()
 	prefix="$1"
 	shift
 	parsedvar="${prefix} "
+	add_quotes="s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /"
 	
 	if [ $# = 0 ]; then
 		return
 	fi
 
 	while [ $# -gt 0 ]; do
-		piece="$(printf %s "$1" | sed "s/\(^[a-zA-Z0-9_]*=\)\(.*\)$/\1\"\2\" /")"
+		piece="$(printf %s "$1" | sed "$add_quotes")"
 		parsedvar="${parsedvar}${piece}"
 		shift
 	done
@@ -255,10 +266,12 @@ trix_probe ()
 	target_file="$2"
 	signature="/^\(\(${identifier}\)[a-zA-Z0-9_]*\)[	 ]*/p"
 
-	cat "$target_file" | sed -n "$signature" | cut -d" " -f1 |
-		while read line; do
-			echo "$line"
-		done
+	cat "$target_file"  |
+	sed -n "$signature" | 
+	cut -d" " -f1       |
+	while read line; do
+		echo "$line"
+	done
 }
 
 trix_probe_env () 
@@ -268,5 +281,6 @@ trix_probe_env ()
 
 trix_probe_matrix () 
 {
-	trix_probe "$trix_matrix_functions" "$@"| sed -n "/$trix_matrix_filter/p"
+	trix_probe "$trix_matrix_functions" "$@" | 
+		sed -n "/$trix_matrix_filter/p"
 }

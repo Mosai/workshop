@@ -27,7 +27,6 @@ test_dispatch_with_call_placeholder ()
 	[ "$expected_string example foaks" = "$help_call" ]
 }
 
-
 test_dispatch_command ()
 {
 	expected_string="Called command"
@@ -36,7 +35,6 @@ test_dispatch_command ()
 	example_command_foo () ( echo "$expected_string $@")
 
 	command_call="$(: | example foo bar baz)"
-	returned_code=$?
 
 	[ "$expected_string bar baz" = "$command_call" ]
 }

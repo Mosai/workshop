@@ -21,10 +21,16 @@ posit_count_tiny ()
 	total="$2"
 	skipped="$3"
 
-	([ "$total"   -gt 0 ] && printf %s " $passed/$total passed.") ||
-	printf %s "No tests found."
+	if [ "$total"   -gt 0 ]; then
+		printf %s " $passed/$total passed."
+	else
+		printf %s "No tests found."
+	fi
 
-	([ "$skipped" -gt 0 ] && printf %s " $skipped/$total skipped.")
+	if [ "$skipped" -gt 0 ]; then
+		printf %s " $skipped/$total skipped."
+	fi
+
 	echo ""
 }
 

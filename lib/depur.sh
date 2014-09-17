@@ -26,14 +26,14 @@ depur_command_help ()
 }
 
 # Options
-depur_option_f     () ( export depur_filter="echo";     dispatch depur "$@" )
-depur_option_full  () ( export depur_filter="echo";     dispatch depur "$@" )
-depur_option_s     () ( export depur_filter="basename"; dispatch depur "$@" )
-depur_option_short () ( export depur_filter="basename"; dispatch depur "$@" )
-depur_option_shell () ( export depur_shell="$1"; shift; dispatch depur "$@" )
+depur_option_f     () ( depur_filter="echo";     dispatch depur "$@" )
+depur_option_full  () ( depur_filter="echo";     dispatch depur "$@" )
+depur_option_s     () ( depur_filter="basename"; dispatch depur "$@" )
+depur_option_short () ( depur_filter="basename"; dispatch depur "$@" )
+depur_option_shell () ( depur_shell="$1"; shift; dispatch depur "$@" )
 
 depur_      () ( echo "No command provided. Try 'depur --help'"; return 1 )
-depur_call_ () ( echo "Call '$@' invalid. Try 'depur --help'"; return 1)
+depur_call_ () ( echo "Call '$*' invalid. Try 'depur --help'"; return 1)
 
 # Runs a command and displays its stack trace
 depur_command_run ()
@@ -62,7 +62,6 @@ depur_command_coverage ()
 
 	# Loop all files listed in the stack
 	for file in $covered_files; do
-		file="$(echo "$file")"
 		if [ ! -z "$file" ] && [ -f $file ]; then
 			cat $file | depur_covfile "$file" "$unsorted"
 			echo ""
@@ -101,20 +100,22 @@ depur_covfile ()
 		# Full line text
 		line="$(printf "%s\n" "$file_line" | tr '`' ' ')"
 		# Number of matches on this line
-		matched="$(echo "$thisfile"         |
+		matched="$(echo "$thisfile"              |
 			sed -n "/	$total_lines$/p" | 
-			wc -l                       | 
+			wc -l                            | 
 			sed "s/[	 ]*//")"
 
 		if [ $matched -gt 0 ]; then
 			covered_lines="$((covered_lines+1))"
 		fi
+
 		# Formatted number of matched lines <tab> the file line
 		covline="$(depur_covline "$total_lines" "$line" "$matched")"
 		traced="$(echo "$covline" | 
-			grep "^> \`-\`"     |
+			grep "^> \`-\`"   |
 			wc -l             | 
 			sed "s/[	 ]*//")"
+
 		if [ $traced -gt 0 ]; then
 			traced_lines=$((traced_lines+1))
 		fi
@@ -124,16 +125,16 @@ depur_covfile ()
 	valid_lines=$(( total_lines - traced_lines ))
 
 	if [ $valid_lines -gt 0 ]; then
-		per=$((100*covered_lines/valid_lines))
+		percent=$((100*covered_lines/valid_lines))
 	else
-		per=0
+		percent=0
 	fi
 
 	filename="$(basename "$file")"
 	totals="$covered_lines/$valid_lines"
 
 	echo ""
-	echo "Total: $filename has $totals lines covered (${per}%)."
+	echo "Total: $filename has $totals lines covered (${percent}%)."
 	IFS= # Restore separator
 }
 
@@ -148,26 +149,28 @@ depur_covline ()
 	alnum="[a-zA-Z0-9_]" # Pattern to look for alnum
 
 	# Ignore comment lines
-	if [ -z "$(echo "$line" | sed "/^${ws}#/d")" ]                 ||
+	if [ -z "$(echo "$line" | sed "/^${ws}#/d")" ]                      ||
 	# Ignore lines with only a '{'
-	   [ -z "$(echo "$line" | sed "/^${ws}{${ws}$/d")" ]           ||
+	   [ -z "$(echo "$line" | sed "/^${ws}{${ws}$/d")" ]                ||
 	# Ignore lines with only a '}'
-	   [ -z "$(echo "$line" | sed "/^${ws}}${ws}$/d")" ]           ||
+	   [ -z "$(echo "$line" | sed "/^${ws}}${ws}$/d")" ]                ||
 	# Ignore lines with only a 'fi'
-	   [ -z "$(echo "$line" | sed "/^${ws}fi${ws}$/d")" ]          ||
+	   [ -z "$(echo "$line" | sed "/^${ws}fi${ws}$/d")" ]               ||
 	# Ignore lines with only a 'done'
-	   [ -z "$(echo "$line" | sed "/^${ws}done${ws}$/d")" ]        ||
+	   [ -z "$(echo "$line" | sed "/^${ws}done${ws}$/d")" ]             ||
 	# Ignore lines with only a 'else'
-	   [ -z "$(echo "$line" | sed "/^${ws}else${ws}$/d")" ]        ||
+	   [ -z "$(echo "$line" | sed "/^${ws}else${ws}$/d")" ]             ||
 	# Ignore lines with only a function declaration
 	   [ -z "$(echo "$line" | sed "/^${ws}${alnum}*${ws}()${ws}$/d")" ] ||
 	# Ignore blank lines
 	   [ -z "$(echo "$line" | sed "/^${ws}$/d")" ]; then
+
 	   	if [ -z "$line" ]; then
 			echo "> \`-\`  "
    		else
 			echo "> \`-\`	\`$line\`  "
 		fi
+		
 		return
 	fi
 
@@ -194,14 +197,14 @@ depur_get_tracer ()
 	filter="${depur_filter}"
 
 	$shell <<-EXTERNAL 2>/dev/null
-	if [ z"\$BASH_VERSION" != z ]; then
-		echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
-	elif [ z"\$(echo "\$KSH_VERSION" | sed -n '/93/p')" != z ]; then
-		echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
-	elif [ z"\$ZSH_VERSION" != z ]; then
-		echo "+	\\\$($filter \\\${(%):-%x:%I})	"
-	else
-		echo "+	:\\\${LINENO:-0}	" # Fallback
-	fi
+		if [ z"\$BASH_VERSION" != z ]; then
+			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
+		elif [ z"\$(echo "\$KSH_VERSION" | sed -n '/93/p')" != z ]; then
+			echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
+		elif [ z"\$ZSH_VERSION" != z ]; then
+			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
+		else
+			echo "+	:\\\${LINENO:-0}	" # Fallback
+		fi
 	EXTERNAL
 }

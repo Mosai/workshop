@@ -49,7 +49,7 @@ posit_option_fast    () ( posit_fast="1";                dispatch posit "$@" )
 posit_option_s       () ( posit_silent="1";              dispatch posit "$@" )
 posit_option_silent  () ( posit_silent="1";              dispatch posit "$@" )
 
-posit_     () ( echo "No command provided. Try 'posit --help'";return 1 )
+posit_      () ( echo "No command provided. Try 'posit --help'";return 1 )
 posit_call_ () ( echo "Call '$@' invalid. Try 'posit --help'"; return 1)
 
 # Lists tests in the specified target path
@@ -197,9 +197,11 @@ posit_listfile ()
 	target_file="$1"
 	signature="/^\(${posit_functions}[a-zA-Z0-9_]*\)[	 ]*/p"
 
-	cat "$target_file" | sed -n "$signature" | cut -d" " -f1 |
-		while read line; do
-			echo "$target_file $line"
-		done
+	cat "$target_file"  |
+	sed -n "$signature" | 
+	cut -d" " -f1       |
+	while read line; do
+		echo "$target_file $line"
+	done
 }
 
