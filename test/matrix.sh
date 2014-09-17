@@ -11,7 +11,6 @@ env_shell_ksh       () ( var TARGET_SHELL="ksh"        SHELL_PKG="ksh"     )
 env_shell_pdksh     () ( var TARGET_SHELL="pdksh"      SHELL_PKG="pdksh"   )
 env_shell_mksh      () ( var TARGET_SHELL="mksh"       SHELL_PKG="mksh"    )
 env_shell_yash      () ( var TARGET_SHELL="yash"       SHELL_PKG="yash"    )
-env_shell_posh      () ( var TARGET_SHELL="posh"       SHELL_PKG="posh"    )
 
 # Extra shells for Ubuntu versions higher than 11.
 env_extras_bash2_0  () ( var TARGET_SHELL="bash2.05b"  SHELL_PKG="bash2.05b"\

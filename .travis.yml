@@ -49,6 +49,10 @@ matrix:
     - env: TRIX_ENV="env_travis_linux env_shell_pdksh"
       os:  linux 
 
+    # Result environment: TARGET_SHELL="yash" SHELL_PKG="yash" 
+    - env: TRIX_ENV="env_travis_linux env_shell_yash"
+      os:  linux 
+
     # Result environment: TARGET_SHELL="zsh" SHELL_PKG="zsh" 
     - env: TRIX_ENV="env_travis_linux env_shell_zsh"
       os:  linux 
