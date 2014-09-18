@@ -199,10 +199,16 @@ depur_clean ()
 	while read covered_line; do
 		dirtypath="$(echo "$covered_line" | cut -d "	" -f1)"
 		fileline="$(echo "$covered_line" | cut -d "	" -f2)"
-		filepath="$(cd -P -- "$(dirname -- "$dirtypath")" &&
-			printf %s\\n "$(pwd -P)/$(basename -- "$dirtypath")")"
+		filepath="$(depur_realpath "$dirtypath")"
 		echo "$filepath	$fileline"
 	done
+}
+
+depur_realpath ()
+{
+	cd -P "$(dirname "$1")"           &&
+	echo "$(pwd -P)/$(basename "$1")" |
+	sed 's/\/\//\//g'
 }
 
 # Returns the command tracer without caching it
@@ -210,17 +216,17 @@ depur_get_tracer ()
 {
 	shell="$1"
 	filter="${depur_filter}"
+	the_line=':\${LINENO:-0}	'
 
 	$shell <<-EXTERNAL 2>/dev/null
-		if [ z"\$BASH_VERSION" != z ]; then
-			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\"):\\\${LINENO:-0}	"
-		elif [ z"\$(echo "\$KSH_VERSION" |
-						sed -n '/93/p')" != z ]; then
-			echo "+	\\\$($filter \"\\\${.sh.file}\"):\\\${LINENO:-0}	"
-		elif [ z"\$ZSH_VERSION" != z ]; then
+		if [ "\${BASH_VERSION:-}" != "" ]; then
+			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\")$the_line"
+		elif [ "\$(echo "\$KSH_VERSION" | sed -n /93/p)" != "" ]; then
+			echo "+	\\\$($filter \"\\\${.sh.file}\")$the_line"
+		elif [ "\${ZSH_VERSION:-}" != "" ]; then
 			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
 		else
-			echo "+	:\\\${LINENO:-0}	" # Fallback
+			echo "+	$the_line" # Fallback
 		fi
 	EXTERNAL
 }
