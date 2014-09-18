@@ -1,17 +1,22 @@
 # Mosai Workshop Editor Configuration
 #
-# These are settings required for a nice and cozy formatting of our source.
+# These are settings required for a nice and cozy
+# formatting of our source.
 
 # Unix-style newlines
 # Removes trailing spaces from lines
 # Adds a newline to the end of file if not present
+# Suggests 78 width line lenght (RFC 5322 Section 2.1.1)
 [*]
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
+rulers = 78
 
-# Use tabs for .sh files (required for shell heredocs to work properly).
-# Tabs have 8 width, because GitHub only uses that width. Damn it.
+# Use tabs for .sh files (required for shell heredocs to
+# work properly).
+# Tabs have 8 width, because GitHub only uses that
+# width. Damn it.
 [*.sh]
 indent_style = tab
 tab_width  = 8
