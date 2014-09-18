@@ -5,7 +5,7 @@ command -v unsetopt 2>/dev/null >/dev/null && unsetopt NO_MATCH
 dispatch ()
 {
 	namespace="$1"     # Namespace to be dispatched
-	arg="$2"           # First argument
+	arg="${2:-}"       # First argument
 	short="${arg#*-}"  # First argument without trailing -
 	long="${short#*-}" # First argument without trailing --
 
