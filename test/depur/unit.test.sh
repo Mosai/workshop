@@ -61,18 +61,8 @@ test_depur_all_options_should_redispatch_after_being_set ()
 
 test_depur_realpath_should_solve_relative_file_paths_to_absolute_ones ()
 {
-	# Gets the first real directory path on the current filesystem
-	for real_dir in /*; do [ -d "$real_dir" ] && break; done
-
-	# Gets the first real file path on the first real directory
-	for real_file in $real_dir/*; do [ -f "$real_file" ] && break; done
-
-	# Gets only the file name for the first real file found
-	basename_file=$(basename "$real_file")
-
-	# The first dir should be a first-level one, make it relative
-	# For example, /bin/ash will be /bin../bin/ash
-	relative_file="$real_dir/..$real_dir/$basename_file"
+	real_file="/usr/bin/env"
+	relative_file="/usr/bin/../bin/env"
 
 	output="$(depur_realpath "$relative_file")"
 
@@ -141,10 +131,11 @@ test_depur_coverage ()
 		covered="$(echo "$output" | grep "^> \`1\`	" | wc -l)"
 		doubled="$(echo "$output" | grep "^> \`2\`	" | wc -l)"
 
-		[ "$skipped_lines" = 16 ] &&
-		[ "$zeroed_lines" = 1 ] &&
-		[ "$covered" = 2 ] &&
-		[ "$doubled" = 1 ]
+		# Variables are unquoted to avoid wc whitespace output
+		[ $skipped_lines = 16 ] &&
+		[ $zeroed_lines = 1 ] &&
+		[ $covered = 2 ] &&
+		[ $doubled = 1 ]
 
 		exit $?
 	}

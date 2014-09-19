@@ -134,7 +134,7 @@ This is an excerpt from the `$ bash bin/posit --shell=bash --report=cov run test
 ### /home/alganet/Projects/mosai/workshop/lib/dispatch.sh
 
 > `-` `# Changes zsh globbing patterns`
-> `11`  `command -v unsetopt 2>/dev/null >/dev/null && unsetopt NO_MATCH`
+> `11`  `unsetopt NO_MATCH >/dev/null 2>&1 || :`
 > `-`
 > `-` `# Dispatches calls of commands and arguments`
 > `-` `dispatch ()`

@@ -1,5 +1,5 @@
 # Changes zsh globbing patterns
-command -v unsetopt 2>/dev/null >/dev/null && unsetopt NO_MATCH
+unsetopt NO_MATCH >/dev/null 2>&1 || :
 
 # Dispatches calls of commands and arguments
 dispatch ()
@@ -37,11 +37,11 @@ dispatch ()
 		main_call=${namespace}_command_${long}
 	fi
 
-	# Warn if dispatched function not found
-	if ! command -v "$main_call" 1>/dev/null 2>/dev/null; then
+	$main_call "${@:-}"
+	dispatch_returned=$?
+
+	if [ $dispatch_returned = 127 ]; then
 		"${namespace}_call_" "$namespace" "$arg" # Empty placeholder
 		return 1
 	fi
-
-	$main_call "$@"
 }

@@ -1,7 +1,7 @@
 # Common settings for all Mosai Workshop scripts
 
 # Enables word split on zsh
-command -v setopt 2>/dev/null >/dev/null && setopt SH_WORD_SPLIT
+setopt SH_WORD_SPLIT >/dev/null 2>&1 || :
 
 # -e exits on any untreated error
 # -u exits on any undeclared variable

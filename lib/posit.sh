@@ -43,7 +43,7 @@ posit_option_shell   () ( posit_shell="$1";     shift && dispatch posit "$@" )
 posit_option_files   () ( posit_files="$1";     shift && dispatch posit "$@" )
 posit_option_funcs   () ( posit_functions="$1"; shift && dispatch posit "$@" )
 posit_option_timeout () ( posit_timeout="$1";   shift && dispatch posit "$@" )
-posit_option_report  () ( posit_mode "$1" &&    shift && dispatch posit "$@" )
+posit_option_report  () ( posit_mode="$1";      shift && dispatch posit "$@" )
 posit_option_f       () ( posit_fast="1";                dispatch posit "$@" )
 posit_option_fast    () ( posit_fast="1";                dispatch posit "$@" )
 posit_option_s       () ( posit_silent="1";              dispatch posit "$@" )
@@ -64,19 +64,6 @@ posit_command_run ()
 {
 	posit_command_list "$1"      | # Lists all tests for the path
 	posit_all_${posit_mode} "$1"   # Processes the tests
-}
-
-# Sets a reporting mode
-posit_mode ()
-{
-	command -v "posit_unit_$1" 1>/dev/null 2>/dev/null
-
-	if [ $? = 0 ]; then
-		export posit_mode=$1
-	else
-		echo "Invalid mode '$1', try 'posit --help'." 1>&2
-		return 1
-	fi
 }
 
 # Run tests from a STDIN list
@@ -155,7 +142,7 @@ posit_external ()
 	# If not silent
 	if [ "$posit_silent" = "-1" ]; then
 		tracer="$(depur "$filter" tracer "$shell")"  # Set up stack
-		test_command="$shell -x"                   # Collect stack
+		test_command="$shell -x"                     # Collect stack
 	fi
 
 	# If timeout command is present, use it
@@ -179,8 +166,7 @@ posit_external ()
 	POSIT_FUNCTION="$test_func"     \
 	$test_command <<-EXTERNAL
 		# Compat options for zsh
-		command -v setopt 2>/dev/null >/dev/null &&
-		setopt PROMPT_SUBST SH_WORD_SPLIT
+		setopt PROMPT_SUBST SH_WORD_SPLIT >/dev/null 2>&1 || :
 
 		setup    () ( : ) # Placeholder setup function
 		teardown () ( : ) # Placeholder teardown function

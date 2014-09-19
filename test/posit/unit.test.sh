@@ -65,16 +65,6 @@ test_posit_option_flag_redispatch ()
 	posit -s        mockpass
 }
 
-test_posit_report_flag_checks_available_report_modes ()
-{
-	# Stubs a command that should be called after options are set
-	posit_command_mockpass () ( true )
-
-	posit --report=invalid___ mockpass
-
-	[ $? = 1 ]
-}
-
 test_posit_list_using_files ()
 {
 	posit_listfile () ( echo "$1 OK" )

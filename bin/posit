@@ -4,13 +4,12 @@
 # If this script is in /foo/bin, points to /foo/lib
 lib_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
-dispatch () ( . "$lib_path/dispatch.sh" && dispatch "$@" )
-depur    () ( . "$lib_path/depur.sh"    && depur "$@" )
-
 . "$lib_path/common.sh"     || exit 1
+. "$lib_path/dispatch.sh"   || exit 1
+. "$lib_path/depur.sh"      || exit 1
 . "$lib_path/posit/tiny.sh" || exit 1
 . "$lib_path/posit/cov.sh"  || exit 1
 . "$lib_path/posit/spec.sh" || exit 1
 . "$lib_path/posit.sh"      || exit 1
 
-posit "$@"
+posit "${@:-}"

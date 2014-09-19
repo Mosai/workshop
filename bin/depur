@@ -4,9 +4,8 @@
 # If this script is in /foo/bin, points to /foo/lib
 lib_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
-dispatch () ( . "$lib_path/dispatch.sh" && dispatch "$@" )
-
-. "$lib_path/common.sh" || exit 1
+. "$lib_path/common.sh"   || exit 1
+. "$lib_path/dispatch.sh" || exit 1
 . "$lib_path/depur.sh"  || exit 1
 
-depur "$@"
+depur "${@:-}"

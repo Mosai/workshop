@@ -225,6 +225,8 @@ depur_get_tracer ()
 			echo "+	\\\$($filter \"\\\${.sh.file}\")$the_line"
 		elif [ "\${ZSH_VERSION:-}" != "" ]; then
 			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
+		elif [ "\${POSH_VERSION:-}" != "" ]; then
+			echo "+	:0	" # Fallback
 		else
 			echo "+	$the_line" # Fallback
 		fi

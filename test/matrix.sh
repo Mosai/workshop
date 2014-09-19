@@ -11,6 +11,7 @@ env_shell_ksh       () ( var TARGET_SHELL="ksh"        SHELL_PKG="ksh"     )
 env_shell_pdksh     () ( var TARGET_SHELL="pdksh"      SHELL_PKG="pdksh"   )
 env_shell_mksh      () ( var TARGET_SHELL="mksh"       SHELL_PKG="mksh"    )
 env_shell_yash      () ( var TARGET_SHELL="yash"       SHELL_PKG="yash"    )
+env_shell_posh      () ( var TARGET_SHELL="posh"       SHELL_PKG="posh"    )
 
 # Extra shells for Ubuntu versions higher than 11.
 env_extras_bash2_0  () ( var TARGET_SHELL="bash2.05b"  SHELL_PKG="bash2.05b"\
@@ -43,6 +44,7 @@ matrix_local ()
 	setup  () ( provision_chooser )
 	script ()
 	{
+		shell_version "$TARGET_SHELL"
 		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
 					--report tiny run "test/"
 	}
@@ -207,4 +209,33 @@ provision_brew ()
 
 	brew update           | sed 's/^/ > /'
 	brew install $pkgspec | sed 's/^/ > /'
+}
+
+# Finds the version for a given shell
+shell_version ()
+{
+	printf %s " > SHELL_VERSION: "
+	case "$1" in
+		busybox* )
+			busybox --help 2>&1 | head -n1
+			;;
+		dash     )
+			echo "Dash can't know its version."
+			;;
+		bash*    )
+			$1 --version 2>&1 | head -n1
+			;;
+		zsh      )
+			zsh --version 2>&1 | head -n1
+			;;
+		*ksh     )
+			$1 -c 'echo $KSH_VERSION'
+			;;
+		yash     )
+			yash --version  2>&1 | head -n1
+			;;
+		posh     )
+			posh -c 'echo $POSH_VERSION'
+			;;
+	esac
 }
