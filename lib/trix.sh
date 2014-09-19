@@ -198,7 +198,13 @@ trix_iterate_entries ()
 			continue
 		fi
 
+		previous_errmode="$(set +o | grep errexit)"
+		set +e
+
 		trix_process_entry "$matrix_entry" "$entry"
+
+		# Restore previous error mode
+		$previous_errmode
 
 		if [ $? != 0 ]; then
 			process_passed=1
@@ -212,7 +218,6 @@ trix_process_entry ()
 {
 	matrix_entry="$1"
 	entry="$2"
-	previous_errmode="$(set +o | grep errexit)"
 
 	include () ( : )
 	exclude () ( : )
@@ -228,11 +233,8 @@ trix_process_entry ()
 	echo "### $matrix_entry: $entry"
 	$matrix_entry
 	: | setup  1>&2
-	set +e
 	: | script
 	script_passed=$?
-	# Restore previous error mode
-	$previous_errmode
 	: | clean  1>&2
 
 	unset -f include
