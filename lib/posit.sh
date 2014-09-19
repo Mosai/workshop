@@ -63,7 +63,7 @@ posit_command_list ()
 posit_command_run ()
 {
 	posit_command_list "$1"      | # Lists all tests for the path
-	posit_all_${posit_mode} "$1"   # Processes the tests
+	"posit_all_${posit_mode}" "$1"   # Processes the tests
 }
 
 # Run tests from a STDIN list

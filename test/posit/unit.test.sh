@@ -93,38 +93,6 @@ test_posit_list_without_parameters ()
 	[ "$expected_list" = "" ]
 }
 
-template_posit_runner ()
-{
-	reporting_mode="$1"
-
-	posit_command_list () ( printf %s "list_called $@ " )
-	posit_process () ( cat; printf %s "process_called $@ " )
-
-	used_path="/path.sh"
-	called="$(posit --report $reporting_mode run "$used_path")"
-	expected="list_called $used_path process_called $used_path "
-
-	[ "$called" = "$expected" ]
-}
-
-test_posit_tiny ()
-{
-	template_posit_runner "tiny"
-}
-
-test_posit_spec ()
-{
-	template_posit_runner "spec"
-}
-
-test_posit_cov ()
-{
-	depur () ( cat )
-
-	template_posit_runner "cov"
-}
-
-
 test_posit_process_with_single_test ()
 {
 	posit_file_pattern=".fixture.sh"

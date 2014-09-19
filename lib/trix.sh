@@ -43,7 +43,7 @@ trix_iterate_matrix ()
 	run_passed=0
 
 	while read matrix_entry; do
-		trix_process "$target_file" "$matrix_entry" || :
+		trix_process "$target_file" "$matrix_entry"
 
 		if [ $? != 0 ]; then
 			run_passed=1

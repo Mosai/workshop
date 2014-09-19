@@ -78,8 +78,17 @@ test_depur_clean_should_extract_files_and_lines_from_a_stack ()
 	stack_stub ()
 	{
 		cat <<-STUBBED_STACK_TRACE
+			This line should be removed. All Stack lines start
+			with a +[TAB].
 			+	/usr/bin/env:4	some command
 			+	/usr/bin/env:9	some command
+
+			Misc non-stack lines can appear at any point
+
+			The line below is a stack line without a file, it
+			should also be removed:
+			+	:0	some_command
+
 			+	/usr/bin/env:9	some command
 			+	/etc/passwd:9	some command
 		STUBBED_STACK_TRACE
@@ -102,8 +111,8 @@ test_depur_clean_should_extract_files_and_lines_from_a_stack ()
 	[ "$output" = "$expected" ]
 }
 
-
-test_depur_coverage ()
+# This is a sort of functional test, it should be rewritten as unit.
+test_depur_coverage_should_count_lines_from_a_clean_stack ()
 {
 	# Gets the resources directory for this test suite
 	resources_dir="$POSIT_DIR/../posit/resources"
@@ -143,24 +152,77 @@ test_depur_coverage ()
 	clean_stub | depur_command_coverage | check
 }
 
-
-test_depur_clean ()
+test_depur_run_should_invoke_a_shell_with_stack_settings ()
 {
-	unit_results_mock ()
-	{
-		cat <<-RESULTS
+	# Depur uses this variable to look for the shell
+	depur_shell="shell_mock"
 
-			This line should be removed
-			+	somefile.sh:2	This line stays!
+	# Mocks the shell to just print what its arguments and the
+	# mocked PS4
+	shell_mock           () ( echo "$@ $PS4" )
 
-			This line should be removed
+	# Mocks the function tracer with fake PS4 information
+	depur_command_tracer () ( echo "! PS4_MOCK" )
 
-			+	somefile.sh:3	This line stays!
-			++	somefile.sh:4	This line stays!
-			++  :3			This line should be removed
-		RESULTS
-	}
-	line_count="$(unit_results_mock | depur_clean | wc -l )"
+	oldPS4="$PS4"
+	PS4='' # Disables the real posit PS4
+	set +x # Disables the real posit debugging
+	output="$(depur_command_run "some_file.sh")"
+	set -x # Re-enables
+	PS4="$oldPS4"
 
-	[ $line_count = 3 ]
+	# Now we can expect a clean call without posit interference
+	expected="-x some_file.sh ! PS4_MOCK"
+
+	[ "$output" = "$expected" ]
+}
+
+test_depur_command_tracer_should_get_a_tracer_if_none_is_set ()
+{
+	# Mocks the function that generates the tracer
+	depur_get_tracer () ( echo "tracer mock" )
+
+	# Keeps the old trace command (from posit)
+	old_depur_trace_command="$depur_trace_command"
+
+	# Cleans, so the tracer will be called
+	export depur_trace_command=''
+
+	# Calls the command_tracer twice
+	output="$(depur_command_tracer "foo")"
+
+	# Restores the posit tracer
+	depur_trace_command="$old_depur_trace_command"
+
+	[ "$output" = "tracer mock" ]
+}
+
+
+test_depur_command_tracer_should_reuse_a_previously_set_tracer ()
+{
+	# Mocks the function that generates the tracer
+	depur_get_tracer () ( echo "fail! this should not be called" )
+
+	# Keeps the old trace command (from posit)
+	old_depur_trace_command="$depur_trace_command"
+
+	# Cleans, so the tracer will be called
+	export depur_trace_command='tracer mock'
+
+	# Calls the command_tracer twice
+	output="$(depur_command_tracer "foo")"
+
+	# Restores the posit tracer
+	depur_trace_command="$old_depur_trace_command"
+
+	[ "$output" = "tracer mock" ]
+}
+
+test_depur_format_should_print_formatted_columns ()
+{
+	input="+	/s:4	some command"
+	expected="        +    /s:4                 some command                  "
+	output="$(echo "$input" | depur_command_format)"
+
+	[ "$output" = "$expected" ]
 }

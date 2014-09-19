@@ -168,6 +168,10 @@ depur_covline ()
 	   [ -z "$(echo "$line" | sed "/^${ws}done${ws}$/d")" ]             ||
 	# Ignore lines with only a 'else'
 	   [ -z "$(echo "$line" | sed "/^${ws}else${ws}$/d")" ]             ||
+	# Ignore lines with only a 'continue'
+	   [ -z "$(echo "$line" | sed "/^${ws}continue${ws}$/d")" ]         ||
+	# Ignore lines with only a 'break'
+	   [ -z "$(echo "$line" | sed "/^${ws}break${ws}$/d")" ]            ||
 	# Ignore lines with only a function declaration
 	   [ -z "$(echo "$line" | sed "/^${ws}${alnum}*${ws}()${ws}$/d")" ] ||
 	# Ignore blank lines
