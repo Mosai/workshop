@@ -5,6 +5,7 @@
 lib_path="$(cd "$(dirname "$0")/../lib";pwd)"
 
 . "$lib_path/common.sh"   || exit 1
+. "$lib_path/dispatch.sh" || exit 1
 . "$lib_path/answer.sh"   || exit 1
 
 answer "${@:-}"

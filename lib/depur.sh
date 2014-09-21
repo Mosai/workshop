@@ -28,6 +28,8 @@ depur_command_help ()
 }
 
 # Options
+depur_option_help   () ( depur_command_help )
+depur_option_h      () ( depur_command_help )
 depur_option_f      () ( depur_filter="echo";      dispatch depur "$@" )
 depur_option_full   () ( depur_filter="echo";      dispatch depur "$@" )
 depur_option_s      () ( depur_filter="basename";  dispatch depur "$@" )
