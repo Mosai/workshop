@@ -1,0 +1,10 @@
+#/usr/bin/env sh
+
+# Gets the lib folder relative to this script location
+# If this script is in /foo/bin, points to /foo/lib
+lib_path="$(cd "$(dirname "$0")/../lib";pwd)"
+
+. "$lib_path/common.sh"   || exit 1
+. "$lib_path/answer.sh"   || exit 1
+
+answer "${@:-}"
