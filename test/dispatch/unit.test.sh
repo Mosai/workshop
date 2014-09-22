@@ -8,7 +8,7 @@ test_dispatch_with_empty_placeholder ()
 {
 	expected_string="Called empty placeholder"
 
-	example  () ( dispatch example "$@" )
+	example  () ( dispatch example "${@:-}" )
 	example_ () ( echo "$expected_string" )
 
 	help_call="$(: | example)"
@@ -121,7 +121,7 @@ test_dispatch_option_long_with_equal_sign_and_quotes ()
 
 	long_call="$(: | example --fanz="bar baz")"
 
-	[ "$expected_string bar baz" = "$long_call" ]
+	[ "$expected_string bar baz " = "$long_call" ]
 }
 
 
@@ -134,7 +134,7 @@ test_dispatch_option_long_with_equal_sign_quotes_and_equal_value ()
 
 	long_call="$(: | example --fanz="bar=baz")"
 
-	[ "$expected_string bar=baz" = "$long_call" ]
+	[ "$expected_string bar=baz " = "$long_call" ]
 }
 
 test_dispatch_option_long_repassing_with_equal_sign ()

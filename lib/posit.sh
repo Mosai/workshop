@@ -1,5 +1,5 @@
 # Dispatches commands to other posit_(command|option) functions
-posit () ( dispatch posit "$@" )
+posit () ( dispatch posit "${@:-}" )
 
 # Global option defaults
 posit_files=".test.sh"  # File name pattern for test files
@@ -39,15 +39,20 @@ posit_command_help ()
 # Option handlers
 posit_option_help    () ( posit_command_help )
 posit_option_h       () ( posit_command_help )
-posit_option_shell   () ( posit_shell="$1";     shift && dispatch posit "$@" )
-posit_option_files   () ( posit_files="$1";     shift && dispatch posit "$@" )
-posit_option_funcs   () ( posit_functions="$1"; shift && dispatch posit "$@" )
-posit_option_timeout () ( posit_timeout="$1";   shift && dispatch posit "$@" )
-posit_option_report  () ( posit_mode="$1";      shift && dispatch posit "$@" )
-posit_option_f       () ( posit_fast="1";                dispatch posit "$@" )
-posit_option_fast    () ( posit_fast="1";                dispatch posit "$@" )
-posit_option_s       () ( posit_silent="1";              dispatch posit "$@" )
-posit_option_silent  () ( posit_silent="1";              dispatch posit "$@" )
+posit_option_f       () ( posit_fast="1";            dispatch posit "${@:-}" )
+posit_option_fast    () ( posit_fast="1";            dispatch posit "${@:-}" )
+posit_option_s       () ( posit_silent="1";          dispatch posit "${@:-}" )
+posit_option_silent  () ( posit_silent="1";          dispatch posit "${@:-}" )
+posit_option_shell   () ( posit_shell="$1";   shift; dispatch posit "${@:-}" )
+posit_option_files   () ( posit_files="$1";   shift; dispatch posit "${@:-}" )
+posit_option_timeout () ( posit_timeout="$1"; shift; dispatch posit "${@:-}" )
+posit_option_report  () ( posit_mode="$1";    shift; dispatch posit "${@:-}" )
+posit_option_funcs   ()
+{
+	posit_functions="$1"
+	shift
+	dispatch posit "${@:-}"
+}
 
 posit_      () ( echo "No command provided. Try 'posit --help'";return 1 )
 posit_call_ () ( echo "Call '$*' invalid. Try 'posit --help'"; return 1)

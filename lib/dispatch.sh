@@ -25,7 +25,7 @@ dispatch ()
 		if [ "$long" != "$longname" ]; then
 			longval="${long#*=}"
 			long="$longname"
-			set -- "$longval" "$@"
+			set -- "$longval" "${@:-}"
 		fi
 
 		main_call=${namespace}_option_${long}

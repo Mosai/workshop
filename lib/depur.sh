@@ -1,5 +1,5 @@
 # Dispatches commands to other depur_ functions
-depur () ( dispatch depur "$@" )
+depur () ( dispatch depur "${@:-}" )
 
 # Global option defaults
 depur_trace_command=""  # Command to extract file/line info on stacks
@@ -30,12 +30,12 @@ depur_command_help ()
 # Options
 depur_option_help   () ( depur_command_help )
 depur_option_h      () ( depur_command_help )
-depur_option_f      () ( depur_filter="echo";      dispatch depur "$@" )
-depur_option_full   () ( depur_filter="echo";      dispatch depur "$@" )
-depur_option_s      () ( depur_filter="basename";  dispatch depur "$@" )
-depur_option_short  () ( depur_filter="basename";  dispatch depur "$@" )
-depur_option_shell  () ( depur_shell="$1";  shift; dispatch depur "$@" )
-depur_option_ignore () ( depur_ignore="$1"; shift; dispatch depur "$@" )
+depur_option_f      () ( depur_filter="echo";      dispatch depur "${@:-}" )
+depur_option_full   () ( depur_filter="echo";      dispatch depur "${@:-}" )
+depur_option_s      () ( depur_filter="basename";  dispatch depur "${@:-}" )
+depur_option_short  () ( depur_filter="basename";  dispatch depur "${@:-}" )
+depur_option_shell  () ( depur_shell="$1";  shift; dispatch depur "${@:-}" )
+depur_option_ignore () ( depur_ignore="$1"; shift; dispatch depur "${@:-}" )
 
 depur_      () ( echo "No command provided. Try 'depur --help'"; return 1 )
 depur_call_ () ( echo "Call '$*' invalid. Try 'depur --help'"; return 1)

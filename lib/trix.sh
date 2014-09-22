@@ -1,5 +1,5 @@
 # Dispatches commands to other trix_ functions
-trix () ( dispatch trix "$@" )
+trix () ( dispatch trix "${@:-}" )
 
 trix_matrix_functions="matrix_"
 trix_env_functions="env_"
@@ -24,8 +24,13 @@ trix_command_help ()
 
 trix_option_help   () ( trix_command_help )
 trix_option_h      () ( trix_command_help )
-trix_option_env    () ( trix_env_filter="$1";    shift && dispatch trix "$@" )
-trix_option_matrix () ( trix_matrix_filter="$1"; shift && dispatch trix "$@" )
+trix_option_env    () ( trix_env_filter="$1"; shift; dispatch trix "${@:-}" )
+trix_option_matrix ()
+{
+	trix_matrix_filter="$1"
+	shift
+	dispatch trix "${@:-}"
+}
 
 trix_      () ( echo "No command provided. Try 'trix --help'"; return 1 )
 trix_call_ () ( echo "Call '$*' invalid. Try 'trix --help'";   return 1 )
