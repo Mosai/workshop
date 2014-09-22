@@ -187,6 +187,12 @@ test_posit_unit_spec_fail ()
 	template_posit_unit spec 1 "fail:"
 }
 
+test_posit_unit_spec_skip ()
+{
+	posit_stack_format () ( : )
+	template_posit_unit spec 3 "skip:"
+}
+
 test_posit_unit_tiny_fail ()
 {
 	template_posit_unit tiny 1 "F"
@@ -196,6 +202,12 @@ test_posit_unit_tiny_success ()
 {
 	template_posit_unit tiny 0 "\."
 }
+
+test_posit_unit_tiny_skip ()
+{
+	template_posit_unit tiny 1 "S"
+}
+
 
 template_posit_exec ()
 {

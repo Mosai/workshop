@@ -16,16 +16,16 @@ posit_head_spec ()
 posit_unit_spec ()
 {
 	test_function="$2"
-	returned="$3"
+	test_returned="$3"
 	results="$4"
 	test_status="fail:"
 
-	if [ "$returned" = "0" ]; then
+	if [ "$test_returned" = "0" ]; then
 		test_status="pass:"
-	elif [ "$returned" = "3" ]; then
+	elif [ "$test_returned" = "3" ]; then
 		test_status="skip:"
 	else
-		returned=1
+		test_returned=1
 	fi
 
 	# Removes the 'test_' from the start of the name
@@ -36,7 +36,7 @@ posit_unit_spec ()
 	echo "  - $test_status $test_function" | tr '_' ' '
 
 	# Formats a stack trace with the test results
-	if [ $returned = 1 ] && [ "$posit_silent" = "-1" ]; then
+	if [ $test_returned = 1 ] && [ "$posit_silent" = "-1" ]; then
 		echo "$results" | depur format
 	fi
 }
