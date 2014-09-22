@@ -170,7 +170,12 @@ template_posit_unit ()
 	expected_string="$3"
 
 	result="$(posit_unit_$expected_mode "/foo/bar" "test_foo_bar" $expected_code "")"
+
+	OLDPS4="$PS4" # Prevent debugger from changing the output on MinGW
+	set +e        # We care only about the output on this test
 	pass_results="$(echo "$result" | grep "$expected_string" | wc -l)"
+	set -e
+	PS4="$OLDPS4"
 
 	[ $pass_results = 1 ]
 }
@@ -205,7 +210,7 @@ test_posit_unit_tiny_success ()
 
 test_posit_unit_tiny_skip ()
 {
-	template_posit_unit tiny 1 "S"
+	template_posit_unit tiny 3 "S"
 }
 
 
