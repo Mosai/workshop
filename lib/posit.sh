@@ -172,8 +172,8 @@ posit_external ()
 		teardown () ( : )   # Placeholder teardown function
 		. "\$POSIT_FILE"    # Loads the tested file
 		setup               # Calls the setup function
-		\$POSIT_FUNCTION || # Calls the tested function
-		has_passed=\$?   && # Stores the result from the test
+		\$POSIT_FUNCTION && # Calls the tested function
+		has_passed=\$?   || # Stores the result from the test
 		has_passed=\$?
 		teardown            # Calls the teardown function
 		exit \$has_passed   # Exits with the test status
