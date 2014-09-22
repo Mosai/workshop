@@ -37,11 +37,12 @@ dispatch ()
 		main_call=${namespace}_command_${long}
 	fi
 
-	$main_call "${@:-}"
-	dispatch_returned=$?
+	$main_call "${@:-}" || dispatch_returned=$? && dispatch_returned=$?
 
 	if [ $dispatch_returned = 127 ]; then
 		"${namespace}_call_" "$namespace" "$arg" # Empty placeholder
 		return 1
 	fi
+
+	return $dispatch_returned
 }

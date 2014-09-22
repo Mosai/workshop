@@ -222,19 +222,19 @@ depur_get_tracer ()
 {
 	shell="$1"
 	filter="${depur_filter}"
-	the_line=':\${LINENO:-0}	'
+	theline=':\${LINENO:-0}	'
 
 	$shell <<-EXTERNAL 2>/dev/null
 		if [ "\${BASH_VERSION:-}" != "" ]; then
-			echo "+	\\\$($filter \"\\\${BASH_SOURCE}\")$the_line"
+			echo "+	\\\$($filter \"\\\${BASH_SOURCE:-}\")$theline"
 		elif [ "\$(echo "\$KSH_VERSION" | sed -n /93/p)" != "" ]; then
-			echo "+	\\\$($filter \"\\\${.sh.file}\")$the_line"
+			echo "+	\\\$($filter \"\\\${.sh.file:-}\")$theline"
 		elif [ "\${ZSH_VERSION:-}" != "" ]; then
 			echo "+	\\\$($filter \\\${(%):-%x:%I})	"
 		elif [ "\${POSH_VERSION:-}" != "" ]; then
 			echo "+	:0	" # Fallback
 		else
-			echo "+	$the_line" # Fallback
+			echo "+	$theline" # Fallback
 		fi
 	EXTERNAL
 }

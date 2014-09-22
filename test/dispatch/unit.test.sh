@@ -1,5 +1,6 @@
 setup ()
 {
+	. "$POSIT_DIR/../../lib/common.sh"
 	. "$POSIT_DIR/../../lib/dispatch.sh"
 }
 

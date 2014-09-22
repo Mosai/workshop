@@ -168,14 +168,15 @@ posit_external ()
 		# Compat options for zsh
 		setopt PROMPT_SUBST SH_WORD_SPLIT >/dev/null 2>&1 || :
 
-		setup    () ( : ) # Placeholder setup function
-		teardown () ( : ) # Placeholder teardown function
-		. "\$POSIT_FILE"  # Loads the tested file
-		setup             # Calls the setup function
-		\$POSIT_FUNCTION  # Calls the tested function
-		has_passed=\$?    # Stores the result from the test
-		teardown          # Calls the teardown function
-		exit \$has_passed # Exits with the test status
+		setup    () ( : )   # Placeholder setup function
+		teardown () ( : )   # Placeholder teardown function
+		. "\$POSIT_FILE"    # Loads the tested file
+		setup               # Calls the setup function
+		\$POSIT_FUNCTION || # Calls the tested function
+		has_passed=\$?   && # Stores the result from the test
+		has_passed=\$?
+		teardown            # Calls the teardown function
+		exit \$has_passed   # Exits with the test status
 	EXTERNAL
 }
 

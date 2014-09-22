@@ -1,5 +1,6 @@
 setup ()
 {
+	. "$POSIT_DIR/../../lib/common.sh"
 	. "$POSIT_DIR/../../lib/dispatch.sh"
 	. "$POSIT_DIR/../../lib/posit/cov.sh"
 	. "$POSIT_DIR/../../lib/posit/spec.sh"
@@ -215,7 +216,6 @@ template_posit_exec ()
 {
 	mode="$1"
 	expected="$2"
-	args="$3"
 	posit_external () ( echo "external called $@" )
 
 	check ()
