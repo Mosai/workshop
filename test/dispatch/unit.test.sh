@@ -11,7 +11,9 @@ test_dispatch_with_empty_placeholder ()
 	example  () ( dispatch example "${@:-}" )
 	example_ () ( echo "$expected_string" )
 
+	OLDPS4="$PS4"
 	help_call="$(: | example)"
+	PS4="$OLDPS4"
 
 	[ "$expected_string" = "$help_call" ]
 }
@@ -23,7 +25,9 @@ test_dispatch_with_call_placeholder ()
 	example       () ( dispatch example "$@" )
 	example_call_ () ( echo "$expected_string $@" )
 
+	OLDPS4="$PS4"
 	help_call="$(: | example foaks)"
+	PS4="$OLDPS4"
 
 	[ "$expected_string example foaks" = "$help_call" ]
 }
@@ -150,7 +154,7 @@ test_dispatch_option_long_repassing_with_equal_sign ()
 		dispatch example "$@"
 	}
 
-	short_repassing_call="$(: | example --fanz="bla=bar" foo)"
+	long_repassing_call="$(: | example --fanz="bla bar" foo)"
 
-	[ "Option ${expected_string} bla=barfooCommand ${expected_string} " = "$short_repassing_call" ]
+	[ "Option ${expected_string} bla barfooCommand ${expected_string} " = "$long_repassing_call" ]
 }
