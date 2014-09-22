@@ -11,8 +11,10 @@ test_dispatch_with_empty_placeholder ()
 	example  () ( dispatch example "${@:-}" )
 	example_ () ( echo "$expected_string" )
 
-	OLDPS4="$PS4"
-	help_call="$(: | example)"
+	OLDPS4="$PS4" # Prevent debugger from changing the output on MinGW
+	set +e        # We care only about the output on this test
+	help_call="$(: | dispatch example)"
+	set -e
 	PS4="$OLDPS4"
 
 	[ "$expected_string" = "$help_call" ]
@@ -25,8 +27,10 @@ test_dispatch_with_call_placeholder ()
 	example       () ( dispatch example "$@" )
 	example_call_ () ( echo "$expected_string $@" )
 
-	OLDPS4="$PS4"
-	help_call="$(: | example foaks)"
+	OLDPS4="$PS4" # Prevent debugger from changing the output on MinGW
+	set +e        # We care only about the output on this test
+	help_call="$(: | dispatch example foaks)"
+	set -e
 	PS4="$OLDPS4"
 
 	[ "$expected_string example foaks" = "$help_call" ]
@@ -39,7 +43,11 @@ test_dispatch_command ()
 	example             () ( dispatch example "$@" )
 	example_command_foo () ( echo "$expected_string $@")
 
-	command_call="$(: | example foo bar baz)"
+	OLDPS4="$PS4" # Prevent debugger from changing the output on MinGW
+	set +e        # We care only about the output on this test
+	command_call="$(: | dispatch example foo bar baz)"
+	set -e
+	PS4="$OLDPS4"
 
 	[ "$expected_string bar baz" = "$command_call" ]
 }

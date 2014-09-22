@@ -5,20 +5,6 @@ setup ()
 	. "$POSIT_DIR/../../lib/trix.sh"
 }
 
-test_trix_empty_call_dispatch ()
-{
-	empty_call="$(trix)"
-
-	[ "$empty_call" = "No command provided. Try 'trix --help'" ]
-}
-
-test_trix_empty_invalid_dispatch ()
-{
-	invalid_call="$(trix foobarbaz)"
-
-	[ "$invalid_call" = "Call 'trix foobarbaz' invalid. Try 'trix --help'" ]
-}
-
 test_trix_parsevar_with_one_variable ()
 {
 	parsed="$(trix_parsevar "export" FOO=bar)"

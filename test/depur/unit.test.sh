@@ -5,28 +5,6 @@ setup ()
 	. "$POSIT_DIR/../../lib/depur.sh"
 }
 
-test_depur_empty_call_should_print_no_command_notice ()
-{
-	output="$(depur)"
-
-	[ "$output" = "No command provided. Try 'depur --help'" ]
-}
-
-test_depur_empty_call_should_return_status_code_1 ()
-{
-	depur
-
-	[ $? = 1 ]
-}
-
-test_depur_invalid_call_should_print_notice ()
-{
-	call="this_call_does_not_exist"
-	output="$(depur $call)"
-
-	[ "$output" = "Call 'depur $call' invalid. Try 'depur --help'" ]
-}
-
 test_depur_all_options_should_call_their_respective_functions ()
 {
 	# Replace actual flags by stubs that should be called

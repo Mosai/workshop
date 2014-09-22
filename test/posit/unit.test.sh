@@ -8,21 +8,6 @@ setup ()
 	. "$POSIT_DIR/../../lib/posit.sh"
 }
 
-test_posit_empty_call_dispatch ()
-{
-	empty_call="$(posit)"
-
-	[ "$empty_call" = "No command provided. Try 'posit --help'" ]
-}
-
-test_posit_empty_invalid_dispatch ()
-{
-	invalid_call="$(posit foobarbaz)"
-
-	[ "$invalid_call" = "Call 'posit foobarbaz' invalid. Try 'posit --help'" ]
-}
-
-
 test_posit_option_flag_dispatch ()
 {
 	# Stub all flag handlers
