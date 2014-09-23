@@ -18,11 +18,11 @@ depur_command_help ()
 	   Usage: depur [option_list...] [command]
 	          depur help, -h, --help [command]  Displays help for command.
 
-	Commands: run    [command] Runs and traces the given command.
+	Commands: run    [script]  Runs and traces the given script.
 	          tracer           Gets a tracer command for a shell.
 	          format           Formats a stack trace from stdin.
-	          coverage         Formats a trace from stdin into
-	                           code coverage results.
+	          coverage         Formats a trace from stdin into code coverage.
+	          profile          Formats a trace from stdin into profile info.
 
 	 Options: --shell  [shell]   Changes the shell used for debugging.
 	          --ignore [pattern] Don't report files matching this pattern.

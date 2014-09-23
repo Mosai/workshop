@@ -56,6 +56,40 @@ test_depur_clean_should_extract_files_and_lines_from_a_stack ()
 	[ "$output" = "$expected" ]
 }
 
+test_depur_profile_should_count_and_order_line_executions ()
+{
+	resource_prefix="+	$POSIT_DIR/../posit/resources/posit_post"
+	# Mocks the depur_realpath function to prevent filesystem interaction
+	depur_realpath () ( echo "$1" )
+
+	# Stubs a stack trace
+	stack_stub ()
+	{
+		cat <<-STUBBED_STACK_TRACE
+			${resource_prefix}cov.fixture.sh:4 some command 4cov
+			${resource_prefix}cov.fixture.sh:9 some command 9cov
+			${resource_prefix}cov.fixture.sh:9 some command 9cov
+			${resource_prefix}cov2.fixture.sh:9 some command 9cov2
+		STUBBED_STACK_TRACE
+	}
+
+	# Prints out the expected stack trace used for assertion
+	expected_stack ()
+	{
+		cat <<-EXPECTED_PROFILE_INFO
+			2	posit_postcov.fixture.sh:9		true
+			1	posit_postcov.fixture.sh:4		true
+			1	posit_postcov2.fixture.sh:9		true
+		EXPECTED_PROFILE_INFO
+	}
+
+	expected="$(expected_stack | cat)"
+	output="$(stack_stub | depur_command_profile)"
+
+	[ "$output" = "$expected" ]
+}
+
+
 # This is a sort of functional test, it should be rewritten as unit.
 test_depur_coverage_should_count_lines_from_a_clean_stack ()
 {

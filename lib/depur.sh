@@ -8,14 +8,14 @@ depur_ignore='*'
 depur_command_run ()
 {
 	# Sets a tracer and run the command on a shell with -x
-	PS4="$(depur_command_tracer "$depur_shell")" $depur_shell -x "$@" 2>&1
+	PS4="$(depur_command_tracer "$depur_shell")" $depur_shell -x $@ 2>&1
 }
 
 # Sets and returns the tracer command to be used on PS4 prompts
 depur_command_tracer ()
 {
 	if [ -z "$depur_trace_command" ]; then
-		export depur_trace_command="$(depur_get_tracer "$1")"
+		depur_trace_command="$(depur_get_tracer "$1")"
 	fi
 
 	echo "$depur_trace_command"
@@ -40,6 +40,27 @@ depur_command_coverage ()
 			cat "$file" | depur_covfile "$file" "$unsorted"
 			echo ""
 		fi
+	done
+}
+
+# Parses a stack from the stdin and outputs its profiling report
+depur_command_profile ()
+{
+	cat               |
+	depur_clean       |
+	sort              |
+	uniq -c           |
+	sort -n -r        |
+	sed 's/^ *//g'    |
+	tr ' ' '	' |
+	while read profile_info; do
+		profile_count="$(echo "$profile_info" | cut -d '	' -f1)"
+		profile_file="$(echo "$profile_info"  | cut -d '	' -f2)"
+		profile_line="$(echo "$profile_info"  | cut -d '	' -f3)"
+		profile_code="$(cat "$profile_file" | sed -n "${profile_line}p")"
+		printf "%s	%s:%s	%s\n"\
+			"$profile_count" "$(basename "$profile_file")"\
+			"$profile_line" "$profile_code"
 	done
 }
 
@@ -121,27 +142,32 @@ depur_covline ()
 	matched="$3"         # How many cover matches
 	ws="[	 ]*"         # Pattern to look for whitespace
 	alnum="[a-zA-Z0-9_]" # Pattern to look for alnum
+	excludes_pattern="
+		# Ignore comment lines
+		/^${ws}#/d
+		# Ignore lines with only a '{' or '}'
+		/^${ws}{${ws}$/d
+		/^${ws}}${ws}$/d
+		# Ignore lines with only a 'fi'
+		/^${ws}fi${ws}$/d
+		# Ignore lines with only a 'done'
+		/^${ws}done${ws}$/d
+		# Ignore lines with only a 'else'
+		/^${ws}else${ws}$/d
+		# Ignore lines with only a 'elif'
+		/^${ws}else${ws}$/d
+		# Ignore lines with only a 'continue'
+		/^${ws}continue${ws}$/d
+		# Ignore lines with only a 'break'
+		/^${ws}break${ws}$/d
+		# Ignore lines with only a function declaration
+		/^${ws}${alnum}*${ws}()${ws}$/d
+		# Ignore blank lines
+		/^${ws}$/d
+	"
 
 	# Ignore comment lines
-	if [ -z "$(echo "$line" | sed "/^${ws}#/d")" ]                      ||
-	# Ignore lines with only a '{'
-	   [ -z "$(echo "$line" | sed "/^${ws}{${ws}$/d")" ]                ||
-	# Ignore lines with only a '}'
-	   [ -z "$(echo "$line" | sed "/^${ws}}${ws}$/d")" ]                ||
-	# Ignore lines with only a 'fi'
-	   [ -z "$(echo "$line" | sed "/^${ws}fi${ws}$/d")" ]               ||
-	# Ignore lines with only a 'done'
-	   [ -z "$(echo "$line" | sed "/^${ws}done${ws}$/d")" ]             ||
-	# Ignore lines with only a 'else'
-	   [ -z "$(echo "$line" | sed "/^${ws}else${ws}$/d")" ]             ||
-	# Ignore lines with only a 'continue'
-	   [ -z "$(echo "$line" | sed "/^${ws}continue${ws}$/d")" ]         ||
-	# Ignore lines with only a 'break'
-	   [ -z "$(echo "$line" | sed "/^${ws}break${ws}$/d")" ]            ||
-	# Ignore lines with only a function declaration
-	   [ -z "$(echo "$line" | sed "/^${ws}${alnum}*${ws}()${ws}$/d")" ] ||
-	# Ignore blank lines
-	   [ -z "$(echo "$line" | sed "/^${ws}$/d")" ]; then
+	if [ -z "$(echo "$line" | sed "$excludes_pattern")" ]; then
 
 	   	if [ -z "$line" ]; then
 			echo "> \`-\`  "
