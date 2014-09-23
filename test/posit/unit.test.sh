@@ -1,54 +1,10 @@
 setup ()
 {
 	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/dispatch.sh"
 	. "$POSIT_DIR/../../lib/posit/cov.sh"
 	. "$POSIT_DIR/../../lib/posit/spec.sh"
 	. "$POSIT_DIR/../../lib/posit/tiny.sh"
 	. "$POSIT_DIR/../../lib/posit.sh"
-}
-
-test_posit_option_flag_dispatch ()
-{
-	# Stub all flag handlers
-	posit_option_report  () ( true )
-	posit_option_shell   () ( true )
-	posit_option_files   () ( true )
-	posit_option_funcs   () ( true )
-	posit_option_timeout () ( true )
-	posit_option_fast    () ( true )
-	posit_option_silent  () ( true )
-	posit_option_f       () ( true )
-	posit_option_s       () ( true )
-
-	# All calls should touch the handlers and return true
-	posit --report  &&
-	posit --shell   &&
-	posit --files   &&
-	posit --funcs   &&
-	posit --timeout &&
-	posit --fast    &&
-	posit --silent  &&
-	posit -f        &&
-	posit -s
-}
-
-test_posit_option_flag_redispatch ()
-{
-	# Stubs a command that should be called after options are set
-	posit_command_mockpass () ( true )
-	posit_unit_foo () ( true )
-
-	# All calls should touch the handlers and return true
-	posit --report  foo mockpass &&
-	posit --shell   foo mockpass &&
-	posit --files   foo mockpass &&
-	posit --funcs   foo mockpass &&
-	posit --timeout foo mockpass &&
-	posit --fast    mockpass &&
-	posit --silent  mockpass &&
-	posit -f        mockpass &&
-	posit -s        mockpass
 }
 
 test_posit_list_using_files ()
@@ -233,17 +189,17 @@ template_posit_exec ()
 
 test_posit_exec_spec ()
 {
-	template_posit_exec spec "--short"
+	template_posit_exec spec "basename"
 }
 
 test_posit_exec_tiny ()
 {
-	template_posit_exec tiny "--short"
+	template_posit_exec tiny "basename"
 }
 
 test_posit_exec_cov ()
 {
-	template_posit_exec cov "--full"
+	template_posit_exec cov "echo"
 }
 
 test_posit_head_spec ()

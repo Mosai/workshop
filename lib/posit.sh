@@ -1,6 +1,3 @@
-# Dispatches commands to other posit_(command|option) functions
-posit () ( dispatch posit "${@:-}" )
-
 # Global option defaults
 posit_files=".test.sh"  # File name pattern for test files
 posit_functions="test_"
@@ -9,53 +6,6 @@ posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
 posit_silent="-1"        # Displays full stacks. Use -1 to turn off
 posit_timeout="3"        # Timeout for each test
-
-# Displays help
-posit_command_help ()
-{
-	cat <<-HELP
-	   Usage: posit [option_list...] [command]
-	          posit help, -h, --help [command]  Displays help for command.
-
-	Commands: run  [path]  Runs tests on the specified path.
-	          list [path]  Lists the tests on the specified path.
-
-	 Options: --report  [mode]    Changes the output mode.
-	          --shell   [shell]   Changes the shell used for tests.
-	          --files   [pattern] Inclusion pattern for test file lookup
-	          --funcs   [pattern] Inclusion pattern for test function lookup
-	          --timeout [time]    Timeout for each single test
-	          --fast,   -f        Stops on the first failed test.
-	          --silent, -s        Don't collect stacks, just run them.
-
-	   Modes: tiny   Uses a single line for the results.
-	          spec   A complete report with the test names and statuses.
-	          trace  The spec report including stack staces of failures.
-	          cov    A code coverage report for the tests.
-
-	HELP
-}
-
-# Option handlers
-posit_option_help    () ( posit_command_help )
-posit_option_h       () ( posit_command_help )
-posit_option_f       () ( posit_fast="1";            dispatch posit "${@:-}" )
-posit_option_fast    () ( posit_fast="1";            dispatch posit "${@:-}" )
-posit_option_s       () ( posit_silent="1";          dispatch posit "${@:-}" )
-posit_option_silent  () ( posit_silent="1";          dispatch posit "${@:-}" )
-posit_option_shell   () ( posit_shell="$1";   shift; dispatch posit "${@:-}" )
-posit_option_files   () ( posit_files="$1";   shift; dispatch posit "${@:-}" )
-posit_option_timeout () ( posit_timeout="$1"; shift; dispatch posit "${@:-}" )
-posit_option_report  () ( posit_mode="$1";    shift; dispatch posit "${@:-}" )
-posit_option_funcs   ()
-{
-	posit_functions="$1"
-	shift
-	dispatch posit "${@:-}"
-}
-
-posit_      () ( echo "No command provided. Try 'posit --help'";return 1 )
-posit_call_ () ( echo "Call '$*' invalid. Try 'posit --help'"; return 1)
 
 # Lists tests in the specified target path
 posit_command_list ()
@@ -132,6 +82,18 @@ posit_process ()
 	fi
 }
 
+posit_get_timer ()
+{
+	if command -v timeout 2>/dev/null 1>/dev/null; then
+
+		# Checks if this timeout version uses -t for duration
+		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then
+			echo "timeout $posit_timeout"
+		else
+			echo "timeout -t $posit_timeout"
+		fi
+	fi
+}
 
 # Executes a file on a function using an external shell process
 posit_external ()
@@ -142,24 +104,17 @@ posit_external ()
 	test_dir="$(dirname "$1")"
 	test_func="$2"
 	filter="$3"
-	tracer=""
+	tracer="depur_command_tracer"
 
 	# If not silent
 	if [ "$posit_silent" = "-1" ]; then
-		tracer="$(depur "$filter" tracer "$shell")"  # Set up stack
-		test_command="$shell -x"                     # Collect stack
+		tracer="$(depur_filter="$filter" "$tracer" "$shell")"
+		test_command="$shell -x"
 	fi
 
 	# If timeout command is present, use it
-	if [ "$posit_timeout" != 0 ] &&
-	   command -v timeout 2>/dev/null 1>/dev/null; then
-
-		# Checks if this timeout version uses -t for duration
-		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then
-			test_command="timeout $posit_timeout $test_command"
-		else
-			test_command="timeout -t $posit_timeout $test_command"
-		fi
+	if [ "$posit_timeout" != 0 ]; then
+		test_command="$(posit_get_timer) $test_command"
 	fi
 
 	# Declares env variables and executes the test in

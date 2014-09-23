@@ -1,41 +1,7 @@
 setup ()
 {
 	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/dispatch.sh"
 	. "$POSIT_DIR/../../lib/depur.sh"
-}
-
-test_depur_all_options_should_call_their_respective_functions ()
-{
-	# Replace actual flags by stubs that should be called
-	depur_option_f      () ( true )
-	depur_option_full   () ( true )
-	depur_option_short  () ( true )
-	depur_option_s      () ( true )
-	depur_option_shell  () ( true )
-	depur_option_ignore () ( true )
-
-	# All calls should touch the handlers and return true
-	depur -f      &&
-	depur --full  &&
-	depur --short &&
-	depur -s      &&
-	depur --shell &&
-	depur --ignore
-}
-
-test_depur_all_options_should_redispatch_after_being_set ()
-{
-	# Stubs a command that should be called after options are set
-	depur_command_commandstub () ( true )
-
-	# All calls should touch the handlers and return true
-	depur -f            commandstub &&
-	depur --full        commandstub &&
-	depur --short       commandstub &&
-	depur -s            commandstub &&
-	depur --shell  "sh" commandstub &&  # This option uses an argument
-	depur --ignore "sh" commandstub     # This option uses an argument
 }
 
 test_depur_realpath_should_solve_relative_file_paths_to_absolute_ones ()

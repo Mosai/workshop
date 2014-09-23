@@ -46,6 +46,7 @@ matrix_local ()
 	{
 		shell_version "$TARGET_SHELL"
 		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
+					--silent --fast\
 					--report tiny run "test/"
 	}
 
