@@ -107,11 +107,13 @@ test_posit_process_with_multiple_tests ()
 
 test_posit_process_with_no_tests ()
 {
+	posit_filter_mock ()  ( : )
 	posit_exec_mock ()  ( echo "exec_mock called $@" )
 	posit_head_mock ()  ( echo "head_mock called $@" )
 	posit_unit_mock ()  ( echo "unit_mock called $@" )
 	posit_count_mock () ( echo "$@" )
 	mocklist () ( true )
+	depur_command_tracer () ( : )
 
 	posit_mode="mock"
 	result="$(mocklist | posit_process "$POSIT_DIR/resources/")"
@@ -173,14 +175,13 @@ test_posit_unit_tiny_skip ()
 template_posit_exec ()
 {
 	mode="$1"
-	expected="$2"
 	posit_external () ( echo "external called $@" )
 
 	check ()
 	{
 		result="$(cat | tail -n 1)"
 
-		[ "$result" = "external called /foo/bar foo_bar $expected" ]
+		[ "$result" = "external called /foo/bar foo_bar" ]
 		exit $?
 	}
 
@@ -189,17 +190,17 @@ template_posit_exec ()
 
 test_posit_exec_spec ()
 {
-	template_posit_exec spec "basename"
+	template_posit_exec spec
 }
 
 test_posit_exec_tiny ()
 {
-	template_posit_exec tiny "basename"
+	template_posit_exec tiny
 }
 
 test_posit_exec_cov ()
 {
-	template_posit_exec cov "echo"
+	template_posit_exec cov
 }
 
 test_posit_head_spec ()

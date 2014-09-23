@@ -6,6 +6,8 @@ posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
 posit_silent="-1"        # Displays full stacks. Use -1 to turn off
 posit_timeout="3"        # Timeout for each test
+posit_timer=''
+posit_tracer=''
 
 # Lists tests in the specified target path
 posit_command_list ()
@@ -29,6 +31,19 @@ posit_process ()
 	total_count=0
 	last_file=""
 	skipped_count="0"
+	# Stores the previous error mode
+	previous_errmode="$(set +o | grep errexit)"
+	filter="$(posit_filter_$mode)"
+
+	# If not silent
+	if [ "$posit_silent" = "-1" ]; then
+		posit_tracer="$(depur_filter="$filter" "depur_command_tracer"\
+			"$posit_shell")"
+	fi
+	# If timeout command is present, use it
+	if [ "$posit_timeout" != 0 ]; then
+		posit_timer="$(posit_get_timer)"
+	fi
 
 	# Each line should have a file and a test function on that file
 	while read test_parameters; do
@@ -36,7 +51,6 @@ posit_process ()
 		test_func="$(echo "$test_parameters" | cut -d " " -f2)"
 		total_count=$((total_count+1))
 		results='' # Resets the results variable
-		previous_errmode="$(set +o | grep errexit)"
 		skipped_return=3
 
 		# Detects when tests should skip
@@ -84,42 +98,37 @@ posit_process ()
 
 posit_get_timer ()
 {
-	if command -v timeout 2>/dev/null 1>/dev/null; then
+	if [ -z "$posit_timer" ] &&
+	   command -v timeout 2>/dev/null 1>/dev/null; then
 
 		# Checks if this timeout version uses -t for duration
 		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then
-			echo "timeout $posit_timeout"
+			posit_timer="timeout $posit_timeout"
 		else
-			echo "timeout -t $posit_timeout"
+			posit_timer="timeout -t $posit_timeout"
 		fi
 	fi
+
+	echo "$posit_timer"
 }
 
 # Executes a file on a function using an external shell process
 posit_external ()
 {
-	shell="$posit_shell"
-	test_command="$posit_shell"
 	test_file="$1"
-	test_dir="$(dirname "$1")"
 	test_func="$2"
-	filter="$3"
-	tracer="depur_command_tracer"
+	test_dir="$(dirname "$1")"
+	shell="$posit_shell"
+	test_command="$posit_timer $posit_shell"
 
 	# If not silent
 	if [ "$posit_silent" = "-1" ]; then
-		tracer="$(depur_filter="$filter" "$tracer" "$shell")"
-		test_command="$shell -x"
-	fi
-
-	# If timeout command is present, use it
-	if [ "$posit_timeout" != 0 ]; then
-		test_command="$(posit_get_timer) $test_command"
+		test_command="$test_command -x"
 	fi
 
 	# Declares env variables and executes the test in
 	# another environment.
-	PS4="$tracer"                   \
+	PS4="$posit_tracer"             \
 	POSIT_CMD="$shell"              \
 	POSIT_FILE="$test_file"         \
 	POSIT_DIR="$test_dir"           \

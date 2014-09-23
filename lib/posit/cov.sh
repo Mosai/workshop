@@ -1,4 +1,5 @@
-posit_exec_cov   () ( posit_external "$1" "$2" "echo" 2>&1 )
+posit_filter_cov () ( echo "echo" )
+posit_exec_cov   () ( posit_external "$1" "$2" 2>&1 )
 posit_all_cov    ()
 {
 	posit_process "$1" |

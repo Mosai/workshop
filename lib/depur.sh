@@ -46,13 +46,13 @@ depur_command_coverage ()
 # Parses a stack from the stdin and outputs its profiling report
 depur_command_profile ()
 {
-	cat               |
-	depur_clean       |
-	sort              |
-	uniq -c           |
-	sort -n -r        |
-	sed 's/^ *//g'    |
-	tr ' ' '	' |
+	cat                |
+	depur_clean        |
+	sort -k 1,1 -k 2,2 |
+	uniq -c            |
+	sort -n -r         |
+	sed 's/^ *//g'     |
+	tr ' ' '	'  |
 	while read profile_info; do
 		profile_count="$(echo "$profile_info" | cut -d '	' -f1)"
 		profile_file="$(echo "$profile_info"  | cut -d '	' -f2)"

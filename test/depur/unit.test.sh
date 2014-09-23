@@ -67,6 +67,8 @@ test_depur_profile_should_count_and_order_line_executions ()
 	{
 		cat <<-STUBBED_STACK_TRACE
 			${resource_prefix}cov.fixture.sh:4 some command 4cov
+			${resource_prefix}cov.fixture.sh:4 some command 4cov
+			${resource_prefix}cov.fixture.sh:9 some command 9cov
 			${resource_prefix}cov.fixture.sh:9 some command 9cov
 			${resource_prefix}cov.fixture.sh:9 some command 9cov
 			${resource_prefix}cov2.fixture.sh:9 some command 9cov2
@@ -77,8 +79,8 @@ test_depur_profile_should_count_and_order_line_executions ()
 	expected_stack ()
 	{
 		cat <<-EXPECTED_PROFILE_INFO
-			2	posit_postcov.fixture.sh:9		true
-			1	posit_postcov.fixture.sh:4		true
+			3	posit_postcov.fixture.sh:9		true
+			2	posit_postcov.fixture.sh:4		true
 			1	posit_postcov2.fixture.sh:9		true
 		EXPECTED_PROFILE_INFO
 	}
