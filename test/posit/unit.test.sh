@@ -40,10 +40,12 @@ test_posit_process_with_single_test ()
 	posit_file_pattern=".fixture.sh"
 	file_mock_location="$POSIT_DIR/resources/posit_postcov.fixture.sh test_should_always_pass"
 	posit_count_mock () ( echo "$1...$2" )
+	posit_filter_mock ()  ( : )
 	posit_exec_mock () ( echo "exec mock called" )
 	posit_head_mock () ( echo "head_mock called" )
 	posit_unit_mock () ( echo "unit_mock called" )
 	posit_all_mock () ( cat )
+	depur_command_tracer () ( : )
 
 	check ()
 	{
@@ -59,9 +61,10 @@ test_posit_process_with_single_test ()
 		exit $?
 	}
 
-	posit_mode="mock"
+
+
 	echo $file_mock_location |
-	posit_process "$POSIT_DIR/resources/" |
+	posit_mode="mock" posit_timer="" posit_process "$POSIT_DIR/resources/" |
 	check
 }
 
@@ -69,11 +72,13 @@ test_posit_process_with_single_test ()
 test_posit_process_with_multiple_tests ()
 {
 	posit_file_pattern=".fixture.sh"
+	posit_filter_mock ()  ( : )
 	posit_exec_mock () ( echo "exec mock called" )
 	posit_head_mock () ( echo "head_mock called" )
 	posit_unit_mock () ( echo "unit_mock called" )
 	posit_count_mock () ( echo "$1...$2" )
 	posit_all_mock () ( cat )
+	depur_command_tracer () ( : )
 
 	mocklist ()
 	{
@@ -99,10 +104,10 @@ test_posit_process_with_multiple_tests ()
 		exit $?
 	}
 
-	posit_mode="mock"
+
 	mocklist |
-		posit_process "$POSIT_DIR/resources/" |
-		check
+	posit_timer=""	posit_mode="mock" posit_process "$POSIT_DIR/resources/" |
+	check
 }
 
 test_posit_process_with_no_tests ()
@@ -115,6 +120,7 @@ test_posit_process_with_no_tests ()
 	mocklist () ( true )
 	depur_command_tracer () ( : )
 
+	posit_timer=""
 	posit_mode="mock"
 	result="$(mocklist | posit_process "$POSIT_DIR/resources/")"
 

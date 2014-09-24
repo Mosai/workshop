@@ -5,7 +5,7 @@ posit_mode="tiny"        # Reporting mode to be used
 posit_shell="sh"         # Shell used to tiny the isolated tests
 posit_fast="-1"          # Fails fast. Use -1 to turn off
 posit_silent="-1"        # Displays full stacks. Use -1 to turn off
-posit_timeout="3"        # Timeout for each test
+posit_timeout=0        # Timeout for each test
 posit_timer=''
 posit_tracer=''
 
@@ -98,15 +98,13 @@ posit_process ()
 
 posit_get_timer ()
 {
-	if [ -z "$posit_timer" ] &&
-	   command -v timeout 2>/dev/null 1>/dev/null; then
+	if [ ! -z "$posit_timer" ]; then
+		echo "$posit_timer"
+		return
+	fi
 
-		# Checks if this timeout version uses -t for duration
-		if [ z"$(timeout -t0 printf %s 2>&1)" != z"" ]; then
-			posit_timer="timeout $posit_timeout"
-		else
-			posit_timer="timeout -t $posit_timeout"
-		fi
+	if command -v timeout >/dev/null 2>&1; then
+		posit_timer="timeout $posit_timeout"
 	fi
 
 	echo "$posit_timer"
