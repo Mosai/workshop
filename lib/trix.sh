@@ -3,6 +3,7 @@ trix_matrix_functions="matrix_"
 trix_env_functions="env_"
 trix_env_filter=".*"
 trix_matrix_filter=".*"
+trix_steps='setup script clean'
 
 trix_command_run ()
 {
@@ -58,8 +59,12 @@ trix_command_travis ()
 			# A courtesy of trix, a Mosai Workshop tool.
 			# Generated from the $matrix_entry on $target_file
 
+			install:
+			  - $0 --steps="setup" $command_options run $target_file
 			script:
-			  - $0 $command_options run $target_file
+			  - $0 --steps="script" $command_options run $target_file
+			after_script:
+			  - $0 --steps="clean" $command_options run $target_file
 			matrix:
 			  include:
 		TRAVISYML
@@ -163,9 +168,11 @@ trix_iterate_entries ()
 {
 	matrix_entry="$1"
 	excluded="$2"
-	process_passed=0
+	success_count=0
+	total_count=0
 
 	while read entry; do
+		total_count=$((total_count+1))
 		is_excluded="$(echo "$excluded" | sed -n "/$entry/p" | wc -l)"
 
 		if [ $is_excluded -gt 0 ]; then
@@ -177,21 +184,26 @@ trix_iterate_entries ()
 
 		trix_process_entry "$matrix_entry" "$entry"
 
+		if [ $? = 0 ]; then
+			success_count=$((success_count+1))
+		fi
+
 		# Restore previous error mode
 		$previous_errmode
-
-		if [ $? != 0 ]; then
-			process_passed=1
-		fi
 	done
 
-	return $process_passed
+	printf \\n%s\\n "Totals: $success_count/$total_count envs passed."
+
+	if [ $total_count != $success_count ]; then
+		return 1
+	fi
 }
 
 trix_process_entry ()
 {
 	matrix_entry="$1"
-	entry="$2"
+	TRIX_ENV="$2"
+	script_passed=0
 
 	include () ( : )
 	exclude () ( : )
@@ -200,16 +212,21 @@ trix_process_entry ()
 	clean   () ( : )
 	var     () ( trix_parsevar "export " "$@" )
 
-	for env_setting in $entry; do
+	for env_setting in $TRIX_ENV; do
 		eval "$($env_setting)"
 	done
 
-	echo "### $matrix_entry: $entry"
 	$matrix_entry
-	: | setup  1>&2
-	: | script
-	script_passed=$?
-	: | clean  1>&2
+
+	case $trix_steps in *"setup"*  ) : | setup  1>&2 ;; esac
+
+	case $trix_steps in *"script"* )
+		: | script
+		script_passed=$?
+		;;
+	esac
+
+	case $trix_steps in *"clean"*  ) : | clean  1>&2 ;; esac
 
 	unset -f include
 	unset -f exclude

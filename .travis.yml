@@ -1,8 +1,12 @@
 # A courtesy of trix, a Mosai Workshop tool.
 # Generated from the matrix_travis on test/matrix.sh
 
+install:
+  - bin/trix --steps="setup" --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
 script:
-  - bin/trix --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
+  - bin/trix --steps="script" --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
+after_script:
+  - bin/trix --steps="clean" --matrix matrix_travis --env "$TRIX_ENV" run test/matrix.sh
 matrix:
   include:
     # Result environment: TARGET_SHELL="bash" SHELL_PKG="bash"

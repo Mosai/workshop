@@ -23,6 +23,11 @@ trix_command_help ()
 
 	 Options: --env    [name]  Runs only the selected environment
 	          --matrix [name]  Runs only the selected matrix
+	          --steps  [name]  Runs only the selected steps
+
+	   Steps: setup   Runs before the actual environment starts
+	          script  The actual script for the env
+	          clean   Runs after the environment has completed its job
 
 	HELP
 }
@@ -30,6 +35,7 @@ trix_command_help ()
 trix_option_help   () ( trix_command_help )
 trix_option_h      () ( trix_command_help )
 trix_option_env    () ( trix_env_filter="$1"; shift; dispatch trix "${@:-}" )
+trix_option_steps  () ( trix_steps="$1";       shift; dispatch trix "${@:-}" )
 trix_option_matrix ()
 {
 	trix_matrix_filter="$1"

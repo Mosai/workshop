@@ -41,10 +41,14 @@ env_rpm_centos6464  () ( var VAGRANT_MACHINE="centos6464" )
 # Local Test Matrix
 matrix_local ()
 {
-	setup  () ( provision_chooser )
+	setup  ()
+	{
+		provision_chooser
+		shell_version "$TARGET_SHELL" "$TRIX_ENV"
+	}
+
 	script ()
 	{
-		shell_version "$TARGET_SHELL"
 		$TARGET_SHELL bin/posit --shell "$TARGET_SHELL"\
 					--silent --fast\
 					--report tiny run "test/"
@@ -105,6 +109,7 @@ matrix_travis ()
 		echo "Setting up build for '$TARGET_SHELL' on '$TRAVIS_OS'..."
 
 		provision_chooser
+		shell_version "$TARGET_SHELL" "$TRIX_ENV"
 	}
 
 	script ()
@@ -215,28 +220,115 @@ provision_brew ()
 # Finds the version for a given shell
 shell_version ()
 {
-	printf %s " > SHELL_VERSION: "
-	case "$1" in
-		busybox* )
-			busybox --help 2>&1 | head -n1
-			;;
-		dash     )
-			echo "Dash can't know its version."
-			;;
-		bash*    )
-			$1 --version 2>&1 | head -n1
-			;;
-		zsh      )
-			zsh --version 2>&1 | head -n1
-			;;
-		*ksh     )
-			$1 -c 'echo $KSH_VERSION'
-			;;
-		yash     )
-			yash --version  2>&1 | head -n1
-			;;
-		posh     )
-			posh -c 'echo $POSH_VERSION'
-			;;
-	esac
+	printf %s "Env '$TRIX_ENV': "
+	$1 <<-'WHATSHELL'
+
+		: 'This script aims at recognizing all Bourne compatible shells.
+		   Emphasis is on shells without any version variables.
+		   Comments to mascheck@in-ulm.de'
+		: '$Id: whatshell.sh,v 1.17 2012/04/23 21:59:02 xmascheck Exp xmascheck $'
+		: 'fixes are tracked on www.in-ulm.de/~mascheck/various/whatshell/'
+
+		LC_ALL=C export LC_ALL
+		: 'trivial cases first, yet parseable for historic shells'
+		case $BASH_VERSION in *.*) { echo "bash $BASH_VERSION";exit;};;esac
+		case $ZSH_VERSION  in *.*) { echo "zsh $ZSH_VERSION";exit;};;esac
+		case "$VERSION" in *zsh*) { echo "$VERSION";exit;};;esac
+		case  "$SH_VERSION" in *PD*|*MIRBSD*) { echo  "$SH_VERSION";exit;};;esac
+		case "$KSH_VERSION" in *PD*|*MIRBSD*) { echo "$KSH_VERSION";exit;};;esac
+		case "$POSH_VERSION" in 0.[1234]*) \
+		     { echo "posh $POSH_VERSION, possibly slightly newer, yet<0.5";exit;}
+		  ;; *.*|*POSH*) { echo "posh $POSH_VERSION";exit;};; esac
+		case $YASH_VERSION in *.*) { echo "yash $YASH_VERSION";exit;};;esac
+
+		myex(){ echo "$@";exit;} # "exec echo" might call the external command
+
+		# Almquist shell aka ash
+		(typeset -i var) 2>/dev/null || {
+		  case $SHELLVERS in "ash 0.2") myex 'original ash';;esac
+		  test "$1" = "debug" && debug=1
+		  n=1; case `(! :) 2>&1` in *not*) n=0;;esac
+		  b=1; case `echo \`:\` ` in '`:`') b=0;;esac
+		  g=0; { set -- -x; getopts x: var
+		         case $OPTIND in 2) g=1;;esac;} >/dev/null 2>&1
+		  p=0; (eval ': ${var#value}') 2>/dev/null && p=1
+		  r=0; ( (read</dev/null)) 2>/dev/null; case $? in 0|1|2)
+			  var=`(read</dev/null)2>&1`; case $var in *arg*) r=1;;esac
+			;;esac
+		  v=1; set x; case $10 in x0) v=0;;esac
+		  t=0; (PATH=;type :) >/dev/null 2>&1 && t=1
+		  test -z "$debug" || echo debug '$n$b$g$p$r$v$t: ' $n$b$g$p$r$v$t
+		  case $n$b$g$p$r$v$t in
+		     00*) myex 'early ash (4.3BSD, 386BSD 0.0-p0.2.3/NetBSD 0.8)'
+		  ;; 010*) myex 'early ash (ash-0.2 port, Slackware 2.1-8.0,'\
+			'386BSD p0.2.4, NetBSD 0.9)'
+		  ;; 1110100) myex 'early ash (Minix 2.x-3.1.2)'
+		  ;; 1000000) myex 'early ash (4.4BSD Alpha)'
+		  ;; 1100000) myex 'early ash (4.4BSD)'
+		  ;; 11001*) myex 'early ash (4.4BSD Lite, early NetBSD 1.x, BSD/OS 2.x)'
+		  ;; 1101100) myex 'early ash (4.4BSD Lite2, BSD/OS 3 ff)'
+		  ;; 1101101) myex 'ash (FreeBSD, Cygwin pre-1.7, Minix 3.1.3 ff)'
+		  ;; esac
+		  e=0; case `(PATH=;exp 0)2>&1` in 0) e=1;;esac
+		  n=0; case y in [^x]) n=1;;esac
+		  r=1; case `(PATH=;noexist 2>/dev/null) 2>&1` in
+		        *not*) r=0 ;; *file*) r=2 ;;esac
+		  f=0; case `eval 'for i in x;{ echo $i;}' 2>/dev/null` in x) f=1;;esac
+		  test -z "$debug" || echo debug '$e$n$r$a$f: ' $e$n$r$a$f
+		  case $e$n$r$f in
+		     1100) myex 'ash (dash 0.3.8-30 - 0.4.6)'
+		  ;; 1110) myex 'ash (dash 0.4.7 - 0.4.25)'
+		  ;; 1010) myex 'ash (dash 0.4.26 - 0.5.2)'
+		  ;; 0120|1120|0100) myex 'ash (Busybox 0.x)'
+		  ;; 0110) myex 'ash (Busybox 1.x)'
+		  ;;esac
+		  a=0; case `eval 'x=1;(echo $((x)) )2>/dev/null'` in 1) a=1;;esac
+		  x=0; case `f(){ echo $?;};false;f` in 1) x=1;;esac
+		  c=0; case `echo -e '\x'` in *\\x) c=1;;esac
+		  test -z "$debug" || echo debug '$e$n$r$f$a$x$c: ' $e$n$r$f$a$x$c
+		  case $e$n$r$f$a$x$c in
+		     1001010) myex 'ash (Slackware 8.1 ff, dash 0.3.7-11 - 0.3.7-14)'
+		  ;; 10010??) myex 'ash (dash 0.3-1 - 0.3.7-10, NetBSD 1.2 - 3.1/4.0)'
+		  ;; 10011*)  myex 'ash (NetBSD 3.1/4.0 ff)'
+		  ;; 00101*)  myex 'ash (dash 0.5.5.1 ff)'
+		  ;; 00100*)  myex 'ash (dash 0.5.3-0.5.5)'
+		  ;;      *)  myex 'unknown ash'
+		  ;;esac
+		}
+
+		savedbg=$! # save unused $! for a later check
+
+		# Korn shell ksh93, $KSH_VERSION not implemented before 93t'
+		# protected: fatal substitution error in non-ksh
+		( eval 'test "x${.sh.version}" != x' ) 2>/dev/null &
+		wait $! && { eval 'myex "ksh93 ${.sh.version}"' ; }
+
+		# Korn shell ksh86/88
+		_XPG=1;test "`typeset -Z2 x=0; echo $x`" = '00' && {
+		  case `print -- 2>&1` in *"bad option"*)
+		    myex 'ksh86 Version 06/03/86(/a)';; esac
+		  test "$savedbg" = '0'&& myex 'ksh88 Version (..-)11/16/88 (1st release)'
+		  test ${x-"{a}"b} = '{ab}' && myex 'ksh88 Version (..-)11/16/88a'
+		  case "`for i in . .; do echo ${i[@]} ;done 2>&1`" in
+		    "subscript out of range"*)
+		    myex 'ksh88 Version (..-)11/16/88b or c' ;; esac
+		  test "`whence -v true`" = 'true is an exported alias for :' &&
+		    myex 'ksh88 Version (..-)11/16/88d'
+		  test "`(cd /dev/null 2>/dev/null; echo $?)`" != '1' &&
+		    myex 'ksh88 Version (..-)11/16/88e'
+		  test "`(: $(</file/notexistent); echo x) 2>/dev/null`" = '' &&
+		    myex 'ksh88 Version (..-)11/16/88f'
+		   case `([[ "-b" > "-a" ]]) 2>&1` in *"bad number"*) \
+		    myex 'ksh88 Version (..-)11/16/88g';;esac # fixed in OSR5euc
+		  test "`cd /dev;cd -P ..;pwd 2>&1`" != '/' &&
+		    myex 'ksh88 Version (..-)11/16/88g' # fixed in OSR5euc
+		  test "`f(){ typeset REPLY;echo|read;}; echo dummy|read; f;
+		     echo $REPLY`" = "" && myex 'ksh88 Version (..-)11/16/88h'
+		  test $(( 010 )) = 8 &&
+		    myex 'ksh88 Version (..-)11/16/88i (posix octal base)'
+		  myex 'ksh88 Version (..-)11/16/88i'
+		}
+
+		echo 'oh dear, unknown shell'
+	WHATSHELL
 }
