@@ -1,13 +1,18 @@
 # Global Options
-answer_cr=$(printf '\r')
-answer_esc=$(printf '\33')
-answer_oldterm=''
-answer_focused=-1
-answer_total=0
+answer_cr=$(printf '\r')   # A plain carriage return
+answer_esc=$(printf '\33') # A plain ESC character
+answer_oldterm=''          # Contains the previous terminal state when changed
+answer_tryfocus=-1         # Current widget trying to be focused
+answer_total=0             # Total number of widgets
+answer_chosen=''           # Text for the chosen widget
+answer_length=50           # Line length
 
 # Gets an answer from a input specification list
 answer_command_get ()
 {
+	answer_tryfocus=-1
+	answer_total=0
+	answer_chosen=''
 	question="$1"
 	shift
 
@@ -59,13 +64,14 @@ answer_command_get ()
 		# Chooses what to do with the key pressed
 		case "$keypressed" in
 			"${k}C" | "${k}OC" ) # RIGHT
-				answer_focus "$widgets" $((answer_focused+1))
+				answer_focus "$widgets" $((answer_tryfocus+1))
 				;;
 			"${k}D" | "${k}OD" ) # LEFT
-				answer_focus "$widgets" $((answer_focused-1))
+				answer_focus "$widgets" $((answer_tryfocus-1))
 				;;
 			"$answer_cr"       ) # ENTER
-				answer_choose "$widgets" "$answer_focused"
+				answer_choose "$widgets" "$answer_tryfocus"
+				return
 				;;
 			"$byte"            ) # CHAR
 
@@ -92,13 +98,14 @@ answer_widgets ()
 }
 
 # Restores old terminal settings and prints a new line
-answer_end () ( stty "$answer_oldterm"; printf %s\\n )
+answer_end () ( stty "$answer_oldterm" )
 
 # Prints a line of widgets and focus one of them by its id.
 answer_focus ()
 {
 	widgets="$1"
 	chosen_focus="$2"
+	answer_length="$(stty size <&2 | cut -d" " -f2)"
 
 	# Loops until a widget is focusable
 	is_focusable=''
@@ -106,9 +113,9 @@ answer_focus ()
 
 		# Widgets start on 1, so we skip 0
 		if [ "$chosen_focus" -gt 0 ]; then
-			is_focusable="$(echo "$widgets"   |
-			     sed -n "${chosen_focus}p" |
-			     tr -d "$answer_cr"        |
+			is_focusable="$(echo "$widgets" |
+			     sed -n "${chosen_focus}p"  |
+			     tr -d "$answer_cr"         |
 			     sed -n '
 				/^ *\[/p
 			     ')"
@@ -122,9 +129,9 @@ answer_focus ()
 		# Finds if this widget is before or after the last focused
 		# in order to properly skip unfocusable widgets in the
 		# right order
-		if [ "$chosen_focus" -gt "$answer_focused" ]; then
+		if [ "$chosen_focus" -gt "$answer_tryfocus" ]; then
 			chosen_focus=$((chosen_focus+1))
-		elif [ "$chosen_focus" -lt "$answer_focused" ]; then
+		elif [ "$chosen_focus" -lt "$answer_tryfocus" ]; then
 			chosen_focus=$((chosen_focus-1))
 		fi
 
@@ -137,17 +144,17 @@ answer_focus ()
 
 	# Ends if no focusable widget is found
 	if [ "$chosen_focus" -gt $((answer_total)) ] &&
-	   [ "$answer_focused" = -1 ];then
-		answer_end; exit
+	   [ "$answer_tryfocus" = -1 ];then
+		answer_end; return
 	fi
 
 	# If the focus is the same, does nothing
-	if [ "$chosen_focus" = "$answer_focused" ] ||
+	if [ "$chosen_focus" = "$answer_tryfocus" ] ||
 	   [ -z "$is_focusable" ]; then
 		return
 	fi
 
-	answer_focused="$chosen_focus"
+	answer_tryfocus="$chosen_focus"
 
 	# Erases the entire line
 	printf '\033[2K\r'
@@ -162,17 +169,34 @@ answer_focus_render ()
 {
 	current_focus="$1"
 	rendering=0 # Current widget id
+	widgets_length=0
 
 	# Loops through widgets from stdin
 	while read widget; do
+		widget="$(printf %s "${widget}" | tr -d "$answer_cr")"
+		widget_length="${#widget}"
+		widgets_length=$((widgets_length+widget_length+1))
+
+		if [ $widgets_length -gt $((answer_length)) ]; then
+			if [ "$current_focus" -gt $((rendering)) ]; then
+				widgets_length=$((widget_length+2))
+				printf '\033[2K\r'
+				printf %s "< "
+			else
+				widgets_length=$((widgets_length-widget_length+2))
+				printf %s " >"
+				break
+			fi
+		fi
+
 		rendering=$((rendering+1))
 
 		# Focused widget
 		if [ "$current_focus" = "$rendering" ]; then
-			printf "\033[7m ${widget} \033[0m" | tr -d "$answer_cr"
+			printf "\033[7m${widget}\033[0m "
 		# Unfocused
 		else
-			printf " ${widget} " | tr -d "$answer_cr"
+			printf "${widget} "
 		fi
 	done
 }
@@ -181,14 +205,43 @@ answer_focus_render ()
 answer_choose ()
 {
 	widgets="$1"
-	answer_focused="$2"
+	answer_tryfocus="$2"
 
-	# Erases the entire line
 	printf '\033[2K\r'
 
-	printf "$widgets"           |
-	sed -n "${answer_focused}p" | # Finds the current widget
-	sed 's/\[ \(.*\) \]/\1/g'     # Removes decorations from answer
+	export answer_chosen="$(printf %s "$widgets" |
+		sed -n "${answer_tryfocus}p"          | # Finds current widget
+		sed 's/\[ \(.*\) \]/\1/g'            | # Removes decorations
+		tr -d "$answer_cr"
+	)"
 
-	answer_end; exit              # Resets terminal and ends
+	answer_end; return            # Resets terminal and ends
+}
+
+answer_command_menu ()
+{
+	menu_answer="$1:"
+	menu_entries="Exit	break"
+	nl="
+"
+
+	while read menu_entry; do
+		menu_button="$(echo "$menu_entry" | cut -d "	" -f1)"
+		menu_answer="${menu_answer}|[ $menu_button ]"
+		menu_entries="${menu_entries}${nl}${menu_entry}"
+	done
+
+	while :; do
+		answer_command_get "$menu_answer|[ Exit ]" < /dev/tty
+		answer_match="$(echo "$menu_entries" | sed -n "/^${answer_chosen}/p" | cut -d"	" -f2)"
+
+		if [ "$answer_match" = "exit" ]; then
+			break
+		fi
+
+		if [ ! -z "$answer_match" ]; then
+			$answer_match
+			break
+		fi
+	done
 }
