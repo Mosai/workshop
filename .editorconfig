@@ -20,6 +20,9 @@ rulers = 78
 [*.sh]
 indent_style = tab
 tab_width  = 8
+[bin/*]
+indent_style = tab
+tab_width  = 8
 
 # Travis and AppVeyor files have classical YAML formatting
 [{.travis.yml, appveyor.yml}]
