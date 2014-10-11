@@ -1,4 +1,4 @@
-# Global Options
+	# Global Options
 answer_cr=$(printf '\r')   # A plain carriage return
 answer_esc=$(printf '\33') # A plain ESC character
 answer_oldterm=''          # Contains the previous terminal state when changed
@@ -209,11 +209,13 @@ answer_choose ()
 
 	printf '\033[2K\r'
 
-	export answer_chosen="$(printf %s "$widgets" |
+	export answer_chosen="$(printf "$widgets" |
 		sed -n "${answer_tryfocus}p"          | # Finds current widget
 		sed 's/\[ \(.*\) \]/\1/g'            | # Removes decorations
 		tr -d "$answer_cr"
 	)"
+
+	printf %s\\r\\n  "$answer_chosen"
 
 	answer_end; return            # Resets terminal and ends
 }
@@ -221,7 +223,7 @@ answer_choose ()
 answer_command_menu ()
 {
 	menu_answer="$1:"
-	menu_entries="Exit	break"
+	menu_entries="Exit	exit"
 	nl="
 "
 
@@ -234,7 +236,6 @@ answer_command_menu ()
 	while :; do
 		answer_command_get "$menu_answer|[ Exit ]" < /dev/tty
 		answer_match="$(echo "$menu_entries" | sed -n "/^${answer_chosen}/p" | cut -d"	" -f2)"
-
 		if [ "$answer_match" = "exit" ]; then
 			break
 		fi

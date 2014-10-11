@@ -29,7 +29,7 @@ posit_unit_spec ()
 	fi
 
 	# Removes the 'test_' from the start of the name
-	test_function=${test_function#test_}
+	test_function="${test_function#$posit_functions}"
 
 	# Displays the test status and humanized test name
 	# replacing _ to spaces
