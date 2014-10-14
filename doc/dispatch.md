@@ -3,7 +3,7 @@ dispatch
 
 A full command line argument dispatcher in 50 lines of portable shell script.
 
-Download the [standalone version](https://github.com/Mosai/workshop/blob/master/lib/dispatch.sh) or use the full [Mosai Workshop](https://github.com/Mosai/workshop).
+Download the [standalone version](https://github.com/Mosai/workshop/blob/master/lib/workshop/dispatch.sh) or use the full [Mosai Workshop](https://github.com/Mosai/workshop).
 
 Usage
 -----
@@ -89,7 +89,7 @@ Invalid call 'dsample foobarbaz'.
 
 ### Simple Options
 
-Support for short and long options is available. 
+Support for short and long options is available.
 
 ```sh
 dsample_option_v    () ( echo "Version: 0.0" )
@@ -119,7 +119,7 @@ dsample_command_hello ()
 		echo "Hello World"
 	else
 		echo "Hi World"
-	fi	
+	fi
 }
 dsample_option_short () ( dsample_short=1; dispatch dsample "$@" )
 
@@ -188,7 +188,7 @@ dsample_command_hello ()
 		echo "Hello World"
 	else
 		echo "Hi World"
-	fi	
+	fi
 }
 
 # Dispatch the arguments

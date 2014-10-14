@@ -1,4 +1,4 @@
-	# Global Options
+# Global Options
 answer_cr=$(printf '\r')   # A plain carriage return
 answer_esc=$(printf '\33') # A plain ESC character
 answer_oldterm=''          # Contains the previous terminal state when changed

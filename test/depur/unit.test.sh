@@ -1,7 +1,9 @@
 setup ()
 {
-	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/depur.sh"
+	lib_path="$POSIT_DIR/../../lib/workshop"
+
+	. "$lib_path/common.sh"
+	. "$lib_path/depur/depur.sh"
 }
 
 test_depur_realpath_should_solve_relative_file_paths_to_absolute_ones ()

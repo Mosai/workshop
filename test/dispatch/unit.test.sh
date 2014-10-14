@@ -1,7 +1,9 @@
 setup ()
 {
-	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/dispatch.sh"
+	lib_path="$POSIT_DIR/../../lib/workshop"
+
+	. "$lib_path/common.sh"
+	. "$lib_path/dispatch.sh"
 }
 
 test_dispatch_with_empty_placeholder ()

@@ -1,7 +1,9 @@
 setup ()
 {
-	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/trix.sh"
+	lib_path="$POSIT_DIR/../../lib/workshop"
+
+	. "$lib_path/common.sh"
+	. "$lib_path/trix/trix.sh"
 }
 
 test_trix_parsevar_with_one_variable ()

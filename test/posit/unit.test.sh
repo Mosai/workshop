@@ -1,10 +1,12 @@
 setup ()
 {
-	. "$POSIT_DIR/../../lib/common.sh"
-	. "$POSIT_DIR/../../lib/posit/cov.sh"
-	. "$POSIT_DIR/../../lib/posit/spec.sh"
-	. "$POSIT_DIR/../../lib/posit/tiny.sh"
-	. "$POSIT_DIR/../../lib/posit.sh"
+	lib_path="$POSIT_DIR/../../lib/workshop"
+
+	. "$lib_path/common.sh"
+	. "$lib_path/posit/cov.sh"
+	. "$lib_path/posit/spec.sh"
+	. "$lib_path/posit/tiny.sh"
+	. "$lib_path/posit/posit.sh"
 }
 
 test_posit_list_using_files ()
